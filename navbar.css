@@ -1,0 +1,222 @@
+/* --- Barra de navegación fija --- */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1050; /* por encima del contenido */
+}
+
+/* --- Espacio para que el contenido no quede tapado --- */
+body {
+  padding-top: 80px; /* ajusta según la altura de tu navbar */
+}
+
+/* Ajuste opcional del logo */
+.logo-navbar {
+  height: 45px;
+  cursor: pointer; /* indica que es clickeable */
+}
+
+
+/* Fondo general del navbar */
+.navbar {
+  padding: 15px 20px;
+  background-color: #343a40; /* Asegura fondo oscuro en caso de que la clase Bootstrap no se aplique */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+/* --- margen superior al contenido para que no quede tapado --- */
+body {
+  padding-top: 100px; /* ajusta según la altura de tu navbar */
+}
+
+/* Botones dentro del navbar */
+.navbar .btn {
+  font-size: 18px;
+  padding: 10px 20px;
+}
+
+/* Logo dentro del navbar */
+.logo-navbar {
+  height: 80px;
+  width: auto;
+}
+
+/* Botón personalizado de menú (si se usa) */
+#menuHamburguesa {
+  display: none;
+  z-index: 1100;
+  color: white; /* Asegura texto/ícono blanco */
+  background-color: transparent;
+  border: 2px solid white;
+  font-size: 28px;
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
+/* Mostrar el botón solo en pantallas pequeñas */
+@media (max-width: 768px) {
+  #menuHamburguesa {
+    display: block;
+  }
+}
+
+#menuHamburguesa:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+
+/* Barra de búsqueda dentro del navbar */
+.search-category {
+  margin-right: 10px;
+}
+
+.search-box {
+  border-radius: 8px 0 0 8px;
+}
+
+.dropdown-btn {
+  border-radius: 0 8px 8px 0;
+  background-color: #ffffff;
+  border: 1px solid #ced4da;
+  padding: 6px 12px;
+  height: 38px;
+}
+
+
+
+
+
+
+
+/* Botones de navegación */
+#flechaIzquierda, #flechaDerecha {
+  width: 40px;
+  height: 40px;
+  font-size: 24px;
+  border-radius: 50%;
+  background-color: #343a40;
+  color: white;
+  border: none;
+  opacity: 0.8;
+}
+
+#flechaIzquierda:hover, #flechaDerecha:hover {
+  opacity: 1;
+  background-color: #0d6efd;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .card-negocio {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .card-negocio img {
+    width: 100%;
+    height: auto;
+  }
+
+  .info-negocio {
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+  }
+
+  #flechaIzquierda,
+  #flechaDerecha {
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+  }
+}
+
+.especialidades-section {
+  margin-top: 0px;
+}
+
+/* Buscador de categorias */
+.search-category {
+  gap: 5px;
+}
+
+.search-box {
+  background-color: transparent;
+  color: white;
+  border: 1px solid white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  width: 200px;
+}
+
+.dropdown-btn {
+  background-color: transparent;
+  color: white;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.dropdown-menu {
+  min-width: 200px;
+}
+
+
+#menuBtn {
+  display: none;
+}
+
+#menuBtn {
+  border: none;
+  background: transparent;
+  color: white;
+}
+
+#menuBtn:hover {
+  color: #ccc;
+}
+
+
+
+
+
+
+/* Mostrar sidebar */
+.sidebar.active {
+  transform: translateX(0);
+}
+
+/* Ocultar sidebar por defecto */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 250px;
+  height: 100%;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 1050;
+}
+
+
+/* Botones pequeños en el navbar */
+.navbar .btn-reservar,
+.navbar #btnLogin,
+.navbar #btnRegistro,
+.navbar a[href="Registro.html"] {
+  font-size: 1rem !important; /* texto más pequeño */
+  padding: 6px 12px !important;  /* reduce alto y ancho */
+  border-radius: 6px !important; /* esquinas suaves */
+  line-height: 1.2 !important;
+}
+
+/* Ajuste visual para mantener separación */
+.navbar .btn-reservar {
+  margin-left: 8px;
+}

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Especialidades - Eventia</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="principalpag.css">
+</head>
+
+<body>
+  <!-- Barra de Navegación -->
+  <nav class="navbar navbar-light bg-dark px-4 d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center">
+      <a href="index.html">
+        <img src="logo.png" alt="Logo de Eventia" class="logo-navbar me-2" />
+      </a>
+
+      <!-- Buscar categoría -->
+      <div class="search-category d-flex align-items-center">
+        <input type="text" class="form-control search-box" value="Buscar categoría" readonly id="searchInput">
+        <div class="dropdown">
+          <button class="dropdown-toggle dropdown-btn" type="button" id="dropdownMenu" data-bs-toggle="dropdown"
+            aria-expanded="false"></button>
+          <ul class="dropdown-menu" aria-labelledby="dropdownMenu">
+            <li><a class="dropdown-item" href="#" data-categoria="Fotografía y Video">Fotografía y Video</a></li>
+            <li><a class="dropdown-item" href="#" data-categoria="Decoración y Ambientación">Decoración y Ambientación</a></li>
+            <li><a class="dropdown-item" href="#" data-categoria="Renta de Mobiliario">Renta de Mobiliario</a></li>
+            <li><a class="dropdown-item" href="#" data-categoria="Música y Entretenimiento">Música y Entretenimiento</a></li>
+            <li><a class="dropdown-item" href="#" data-categoria="Banquete y Bebidas">Banquete y Bebidas</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Botón "Registra tu negocio aquí" -->
+      <button id="btnRegistroNegocio" class="trabaja-btn-mini custom-btn-position">
+        Registra tu negocio aquí
+      </button>
+    </div>
+  </nav>
+
+  <!-- Botón de menú hamburguesa -->
+  <div class="menu-container position-fixed top-0 end-0 m-3">
+    <button class="btn menu-btn-custom position-relative" id="menuBtn">
+      &#9776;
+      <span id="notificacionIcono"
+        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark"
+        style="display:none; font-size:1.1rem; border:2px solid white;">
+        🔔
+      </span>
+    </button>
+  </div>
+
+  <!-- Panel lateral -->
+  <div id="sidebar" class="sidebar bg-light border-start">
+    <button class="close-btn btn btn-sm btn-danger mt-2 ms-2">X</button>
+    <div class="p-3">
+      <h5>Información del usuario</h5>
+      <p><strong>Usuario:</strong> <span id="usuarioNombre">Cargando...</span></p>
+      <p><strong>Correo:</strong> <span id="usuarioCorreo">Cargando...</span></p>
+    </div>
+
+    <div class="text-center mt-3 position-relative">
+      <a href="misreservaciones.html" id="btnMisReservaciones" class="btn btn-outline-primary position-relative">
+        Mis reservaciones
+        <span id="contadorReservas"
+          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+          style="display:none; font-size:0.8rem; border:2px solid white;">
+          0
+        </span>
+      </a>
+    </div>
+
+    <div class="p-3 text-center" id="modoProveedorTexto" style="display: none;">
+      <p class="text-success fw-bold mb-0">Modo proveedor activado</p>
+    </div>
+
+    <div class="p-3" id="btnMisNegociosContainer" style="display: none;">
+      <a href="misNegocios.html" class="btn btn-primary w-100">Mis negocios</a>
+    </div>
+
+    <div class="p-3">
+      <button class="btn btn-danger w-100" id="cerrarSesionBtn">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <!-- Carrusel de negocios -->
+  <section class="carrusel-negocios w-100 mt-2">
+    <div class="position-relative overflow-hidden w-100">
+      <div id="contenedorCarrusel" class="carousel-slide d-flex transition-all"></div>
+      <button class="btn btn-dark position-absolute top-50 start-0 translate-middle-y z-3"
+        id="flechaIzquierda">&#10094;</button>
+      <button class="btn btn-dark position-absolute top-50 end-0 translate-middle-y z-3"
+        id="flechaDerecha">&#10095;</button>
+    </div>
+  </section>
+
+  <!-- Categorías -->
+  <div class="container py-5">
+    <h2 class="text-center mb-5">Elige una categoría</h2>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card h-100" onclick="redirigir('Fotografía y Video')">
+          <img src="fotovideo.jpg" class="card-img-top" alt="Fotografía y Video">
+          <div class="card-body text-center">
+            <h5 class="card-title">Fotografía y Video</h5>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100" onclick="redirigir('Decoración y Ambientación')">
+          <img src="decoracion.jpg" class="card-img-top" alt="Decoración y Ambientación">
+          <div class="card-body text-center">
+            <h5 class="card-title">Decoración y Ambientación</h5>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100" onclick="redirigir('Renta de Mobiliario')">
+          <img src="Mobiliario.jpg" class="card-img-top" alt="Renta de Mobiliario">
+          <div class="card-body text-center">
+            <h5 class="card-title">Renta de Mobiliario</h5>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100" onclick="redirigir('Música y Entretenimiento')">
+          <img src="musica.jpg" class="card-img-top" alt="Música y Entretenimiento">
+          <div class="card-body text-center">
+            <h5 class="card-title">Música y Entretenimiento</h5>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100" onclick="redirigir('Banquete y Bebidas')">
+          <img src="banquetes.jpg" class="card-img-top" alt="Banquete y Bebidas">
+          <div class="card-body text-center">
+            <h5 class="card-title">Banquete y Bebidas</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="principalpag.js"></script>
+</body>
+</html>

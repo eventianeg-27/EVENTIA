@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio de Sesión - Reservación de Eventos</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="iniciosesion.css">
+</head>
+  <!-- Barra de Navegación -->
+<nav class="navbar navbar-light bg-dark px-4 d-flex justify-content-between align-items-center">
+  <div class="d-flex align-items-center">
+    <img src="logo.png" alt="Logo de Eventia" class="logo-navbar me-2" />
+</div>
+</nav>
+
+<body>
+    <div class="container d-flex align-items-center justify-content-center min-vh-100">
+        <div class="card shadow-lg" style="width: 100%; max-width: 700px;">
+            <div class="card-body">
+                <h2 class="text-center mb-4">Iniciar Sesión</h2>
+                <form id="formLogin">
+                    <div class="form-group mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <img src="usuario.jpeg" alt="Usuario" class="header-image mr-2">
+                            <label for="username" class="mb-0">Nombre de Usuario</label>
+                        </div>
+                        <input type="text" class="form-control" id="username" placeholder="Ingrese su nombre de usuario"
+                            required>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <img src="contraseña.jpeg" alt="Contraseña" class="header-image mr-2">
+                            <label for="password" class="mb-0">Contraseña</label>
+                        </div>
+                        <input type="password" class="form-control" id="password" placeholder="Ingrese su contraseña"
+                            required>
+                    </div>
+
+                    <button id="btnIniciarSesion" type="submit" class="btn btn-primary btn-block">Continuar</button>
+      
+                    <!-- Botón de Iniciar con Google -->
+                    <button id="btnGoogle" type="button" class="btn btn-danger btn-block mt-3">
+                    Iniciar sesión con Google
+                    </button>
+
+
+                </form>
+                <!-- Botón para regresar al inicio -->
+                <a href="index.html" class="btn btn-secondary w-100 mt-3">
+                    <i class="fas fa-arrow-left me-2"></i> Volver al inicio
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Script de inicio de sesión -->
+    <script type="module" src="iniciosesion.js"></script>
+</body>
+
+</html>

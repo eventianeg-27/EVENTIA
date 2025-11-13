@@ -1,0 +1,20 @@
+body {
+  background-color: #f7f7f7;
+}
+
+h2 {
+  color: #333;
+}
+
+label {
+  font-weight: 500;
+}
+
+button.btn-primary {
+  background-color: #4CAF50;
+  border: none;
+}
+
+button.btn-primary:hover {
+  background-color: #45a049;
+}

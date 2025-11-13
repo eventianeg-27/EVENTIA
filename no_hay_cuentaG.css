@@ -1,0 +1,61 @@
+body {
+  margin: 0;
+  padding-top: 70px; /* espacio para que no se solape con la navbar fija */
+  background-color: #f8f9fa;
+  font-family: Arial, sans-serif;
+}
+
+
+
+
+.navbar {
+    padding: 15px 20px;
+}
+
+.navbar .btn {
+    font-size: 18px;
+    padding: 10px 20px;
+}
+
+.logo-navbar {
+  height: 80px; /* Ajusta el tamaño del logo */
+  width: auto;
+}
+
+.logo-navbar {
+  height: 50px;
+}  /* Barra de navegación para que sea mas DELGADA */
+
+
+
+.alert-box {
+  background-color: white;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 30px;
+  text-align: center;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.alert-icon {
+  font-size: 60px;
+  color: #ffc107;
+}
+
+.correo-text {
+  font-weight: bold;
+  color: #dc3545;
+  font-size: 18px;
+}
+
+.btn-group-horizontal a {
+  margin: 0 10px;
+}
+
+.main-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 70vh;
+}

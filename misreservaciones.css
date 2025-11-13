@@ -1,0 +1,63 @@
+/* ====== Estilos generales ====== */
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+/* Barra de navegación (igual que Registro) */
+.navbar {
+  padding: 15px 20px;
+}
+
+.logo-navbar {
+  height: 80px; /* ✅ Mismo tamaño de logo */
+  width: auto;
+}
+
+/* ====== Bloques de reservación ====== */
+.reserva-card {
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  padding: 1.25rem;
+  transition: transform 0.2s ease;
+}
+
+.reserva-card:hover {
+  transform: scale(1.01);
+}
+
+.estado {
+  font-weight: bold;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  text-transform: capitalize;
+  font-size: 0.9rem;
+}
+
+.estado.pendiente {
+  background-color: #f1c40f;
+  color: #fff;
+}
+
+.estado.aceptado {
+  background-color: #2ecc71;
+  color: #fff;
+}
+
+.estado.rechazado {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
+
+
+
+.negocio-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ddd;
+}

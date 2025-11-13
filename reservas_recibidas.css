@@ -1,0 +1,15 @@
+body {
+  background: #eef2f7;
+}
+
+.logo-navbar {
+  height: 40px;
+}
+
+.table th, .table td {
+  vertical-align: middle !important;
+}
+
+.btn-info {
+  color: #fff;
+}

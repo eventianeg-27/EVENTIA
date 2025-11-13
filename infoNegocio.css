@@ -1,0 +1,23 @@
+.galeria-derecha {
+  margin-left: 80px; /* mueve la galería hacia la derecha */
+}
+
+#galeriaNegocio img,
+#galeriaNegocio video {
+  width: 100%;              /* Ocupa todo el ancho del contenedor */
+  height: 200px;            /* Aumenta la altura (puedes ajustar) */
+  object-fit: cover;        /* Mantiene proporción y recorta bordes */
+  border-radius: 10px;      /* Bordes redondeados agradables */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Sombra ligera */
+}
+
+#contenidoNegocio h5 {
+  font-size: 1rem; /* más pequeño (default suele ser 1.25rem) */
+  font-weight: 600;
+  color: #333;
+}
+
+/* Da espacio debajo de la barra de navegación */
+body {
+  padding-top: 150px; /* antes era ~80px, ahora más alto */
+}

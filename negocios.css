@@ -1,0 +1,70 @@
+body {
+  background-color: #f8f9fa;
+}
+
+h2 {
+  color: #333;
+}
+
+/* --- TARJETA --- */
+.negocio-card {
+  background-color: #ffffff;
+  border-radius: 18px;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  height: 400px; /* 🔸 altura más larga */
+  margin: 20px auto;
+  cursor: pointer;
+}
+
+.negocio-card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 2opx rgba(0, 0, 0, 0.15);
+}
+
+/* Imagen ocupa toda la parte superior */
+.negocio-img-container {
+  width: 100%;
+  height: 180px; /* altura fija */
+  overflow: hidden;
+}
+
+.negocio-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* recorta bien sin deformar */
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.negocio-card:hover .negocio-img {
+  transform: scale(1.05);
+}
+
+/* contenido inferior */
+.negocio-info {
+  background-color: #fff;
+  padding: 16px 18px 18px;
+  text-align: center;
+}
+
+.negocio-info h5 {
+  margin: 0;
+  font-weight: 600;
+  color: #222;
+}
+
+.negocio-info p {
+  font-size: 0.95rem;
+  color: #666;
+  margin-top: 4px;
+}
+
+.negocio-info i {
+  color: #dc3545; /* color rojo suave para el ícono de ubicación */
+}

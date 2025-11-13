@@ -1,0 +1,195 @@
+/* index.css */
+main.container {
+  margin-bottom: 40px;   /* sin espacio debajo */
+  padding-bottom: 0;  /* quita espacio interno abajo */
+  padding-top: 20px;  /* ajusta solo un poco el respiro arriba */
+  background: none;   /* quita el fondo gris */
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-x: hidden;
+  padding-top: 50px; /* Ajusta según la altura real de tu navbar */
+}
+
+
+/* Sección del carrusel */
+/* Sección del carrusel */
+/* Carrusel ocupa casi toda la pantalla, pero con margen superior reducido */
+/* Aumentar ligeramente la altura del carrusel */
+/* Aumentamos aún más la altura del carrusel */
+.carrusel-negocios {
+ margin-bottom: 0;
+  width: 100%;
+  height: 60vh; /* Máxima altura posible según la ventana del navegador */
+  position: relative;
+  overflow: hidden;
+ 
+}
+
+/* Cada slide debe llenar completamente esa altura */
+.card-slide {
+  min-width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+/* La tarjeta también debe llenarla completamente */
+.card-negocio {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 60px;
+}
+
+
+
+/* Oscurece ligeramente para mejorar contraste del contenido */
+.card-negocio::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3); /* menor opacidad que antes */
+  z-index: 1;
+}
+
+/* Imagen de perfil */
+.foto-perfil-circular {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid white;
+  z-index: 2;
+  margin-bottom: 20px;
+}
+
+.foto-perfil-circular img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Información centrada y más visible */
+.info-negocio {
+  position: relative;
+  z-index: 2;
+  color: white;
+  text-align: center;
+  max-width: 90%;
+}
+
+.titulo-negocio {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 10px 0;
+  text-shadow: 2px 2px 6px #000;
+}
+
+.descripcion-negocio {
+  font-size: 1.1rem;
+  text-shadow: 1px 1px 4px #000;
+}
+
+
+
+
+/* Botones de navegación */
+#flechaIzquierda, #flechaDerecha {
+  width: 40px;
+  height: 40px;
+  font-size: 24px;
+  border-radius: 50%;
+  background-color: #343a40;
+  color: white;
+  border: none;
+  opacity: 0.8;
+}
+
+#flechaIzquierda:hover, #flechaDerecha:hover {
+  opacity: 1;
+  background-color: #0d6efd;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .card-negocio {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .card-negocio img {
+    width: 100%;
+    height: auto;
+  }
+
+  .info-negocio {
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+  }
+
+  #flechaIzquierda,
+  #flechaDerecha {
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+  }
+}
+
+.especialidades-section h2,
+.especialidades-section h3 {
+  margin-top: 30px;   /* espacio arriba */
+  padding-top: 0;
+}
+
+.especialidades-section {
+  margin-top: 5px !important; /* quita casi todo el espacio */
+  margin-top: 100px;
+  margin-bottom: 70px;  /* agrega espacio abajo */
+}
+
+
+
+
+
+/* Buscador de categorias */
+.search-category {
+  gap: 5px;
+}
+
+.search-box {
+  background-color: transparent;
+  color: white;
+  border: 1px solid white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  width: 200px;
+}
+
+.dropdown-btn {
+  background-color: transparent;
+  color: white;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.dropdown-menu {
+  min-width: 200px;
+}
+
+/* Ajuste para mover el buscador más a la derecha */
+.search-category {
+  gap: 5px;
+  margin-right: 10px; /* Reduce el espacio con respecto a los botones */
+}

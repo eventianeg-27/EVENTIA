@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Registro de Proveedor - Eventia</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="negoregistro.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+  <div class="container py-5">
+    <h5 id="planElegido" class="text-center text-primary mb-4"></h5>
+
+    <h2 class="text-center mb-4">Si desea ofertar un servicio, complete estos datos</h2>
+
+    <!-- Formulario del proveedor -->
+    <div class="card p-4 shadow">
+      <div class="text-center mb-4">
+        <i class="fas fa-briefcase fa-2x text-success mb-2"></i>
+        <h3>Información del servicio</h3>
+        <p class="text-muted small">Registra los detalles para mostrar tu negocio en Eventia</p>
+      </div>
+
+      <form>
+        <input type="text" class="form-control mb-3" id="negocio" placeholder="Nombre del negocio" required />
+        <input type="tel" class="form-control mb-3" id="telefono" placeholder="Teléfono de contacto" required />
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" id="ubicacion" placeholder="Ubicación del negocio" required />
+          <button class="btn btn-outline-success" type="button" id="verEnMapa">
+            <i class="bi bi-geo-alt-fill"></i> Ver en Maps
+          </button>
+        </div>
+        <small id="mapLinkText" class="text-muted" style="display:none;"> <a href="#" target="_blank" id="mapLink">Ver
+            ubicación</a></small>
+
+
+        <!-- Imagen de la fachada -->
+        <hr class="my-4" />
+        <h5 class="text-primary mb-3"><i class="fas fa-store me-2"></i>Imagen de la fachada del negocio</h5>
+        <div class="mb-3">
+          <label for="fotoFachada" class="form-label">Sube una imagen de la fachada:</label>
+          <input type="file" class="form-control" id="fotoFachada" accept="image/*" />
+        </div>
+
+        <!-- Vista previa de la fachada -->
+        <div id="previewFachada" class="mb-3">
+          <img id="previewFachadaImg" style="display:none; max-width: 250px; border-radius: 10px;" />
+        </div>
+
+        <!-- Referencia de ubicación del negocio -->
+        <hr class="my-4" />
+        <h5 class="text-primary mb-3"><i class="fas fa-map-marker-alt me-2"></i>Referencia de ubicación</h5>
+        <p class="text-muted small">
+          Describe un punto de referencia que ayude a ubicar tu negocio físicamente
+          (por ejemplo: “Frente a la paletería La Michoacana”, “Junto a la iglesia principal”, “A un costado del Oxxo
+          San José”).
+        </p>
+        <textarea class="form-control mb-3" id="referencias"
+          placeholder="Ejemplo: Frente a la paletería La Michoacana, junto a la ferretería El Sol, etc."
+          rows="3"></textarea>
+
+
+        <!-- Redes sociales -->
+        <hr class="my-4" />
+        <h5 class="text-primary"><i class="fas fa-hashtag me-2"></i>Redes sociales</h5>
+
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="redSocial" id="facebook" value="Facebook"
+            onchange="mostrarCampoRed(this)">
+          <label class="form-check-label" for="facebook">
+            <i class="fab fa-facebook me-1 text-primary"></i> Facebook
+          </label>
+        </div>
+
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="redSocial" id="instagram" value="Instagram"
+            onchange="mostrarCampoRed(this)">
+          <label class="form-check-label" for="instagram">
+            <i class="fab fa-instagram me-1 text-danger"></i> Instagram
+          </label>
+        </div>
+
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="redSocial" id="otro" value="Otro"
+            onchange="mostrarCampoRed(this)">
+          <label class="form-check-label" for="otro">
+            <i class="fas fa-globe me-1 text-secondary"></i> Otro
+          </label>
+        </div>
+
+
+        <div id="camposRedes" class="mb-3 mt-2"></div>
+
+        <!-- Imagen de perfil -->
+        <hr class="my-4" />
+        <h5 class="text-primary"><i class="fas fa-image me-2"></i>Foto de perfil</h5>
+
+        <div class="mb-3">
+          <label for="fotoPerfil" class="form-label">Sube una imagen:</label>
+          <input type="file" class="form-control" id="fotoPerfil" accept="image/*" />
+        </div>
+
+        <!-- Contenedor de vista previa con alineación -->
+        <div class="d-flex">
+          <div id="previewFotoPerfil" class="me-3">
+            <img id="previewImagen" style="display:none; max-width: 200px; border-radius: 10px;" />
+          </div>
+        </div>
+
+
+
+        <!-- Especialidad -->
+        <hr class="my-4" />
+        <h5 class="text-primary"><i class="fas fa-star me-2"></i>Escoge la especialidad a ofertar</h5>
+        <div class="mb-3">
+          <select class="form-select" id="especialidad" required>
+            <option value="">Seleccione una</option>
+            <option>Fotografía y Video</option>
+            <option>Decoración y Ambientación</option>
+            <option>Renta de Mobiliario</option>
+            <option>Música y Entretenimiento</option>
+            <option>Banquete y Bebidas</option>
+          </select>
+        </div>
+
+        <!-- Descripción -->
+        <textarea class="form-control mb-3" id="descripcion" placeholder="Descripción breve del servicio"
+          required></textarea>
+
+
+        <!-- Sección: Disponibilidad -->
+        <hr class="my-4" />
+        <h5 class="text-primary"><i class="fas fa-clock me-2"></i>Disponibilidad del servicio</h5>
+
+        <p class="text-muted small">
+          Indica el horario en que tu negocio abre y cierra cada día.
+        </p>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="horaApertura" class="form-label">Hora de apertura:</label>
+            <input type="time" class="form-control" id="horaApertura" required />
+          </div>
+          <div class="col-md-6">
+            <label for="horaCierre" class="form-label">Hora de cierre:</label>
+            <input type="time" class="form-control" id="horaCierre" required />
+          </div>
+        </div>
+
+        <!-- Sección: Precio estimado -->
+        <hr class="my-4" />
+        <h5 class="text-success"><i class="fas fa-dollar-sign me-2"></i>Cantidad estimada para que el cliente reserve
+        </h5>
+
+        <div class="mb-3">
+          <label for="montoInicial" class="form-label">Monto sugerido (MXN):</label>
+          <input type="number" class="form-control" id="montoInicial" placeholder="Ej. 500" required />
+        </div>
+        <!-- Evidencias -->
+        <hr class="my-4" />
+        <h5 class="text-primary mb-4"><i class="fas fa-folder-open me-2"></i>Suba fotos o vídeos de su
+          trabajo:</h5>
+        <div id="contenedorEvidencias">
+          <!-- Se agregará dinámicamente -->
+        </div>
+        <button type="button" class="btn btn-outline-primary mb-3" id="agregarEvidencia">
+          <i class="fas fa-plus-circle me-1"></i><span id="textoBotonEvidencia">Agregar fotos y/o vídeos</span>
+        </button>
+
+
+        <!-- Botón -->
+        <div class="d-flex justify-content-between">
+          <button type="button" class="btn btn-success w-50 me-2" id="btnRegistro">Finalizar Registro</button>
+          <button type="button" class="btn btn-secondary w-50" id="btnCancelar">Cancelar</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="negoregistro.js"></script>
+
+  <!-- Script para mostrar el campo de red social -->
+  <script>
+    function mostrarCampoRed(input) {
+      const campo = document.getElementById('usuarioRed');
+      campo.style.display = 'block';
+      campo.placeholder = `Nombre en ${input.value}`;
+    }
+  </script>
+
+
+</body>
+
+</html>

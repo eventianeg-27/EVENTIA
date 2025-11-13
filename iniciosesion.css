@@ -1,0 +1,69 @@
+/* General */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+/* Barra de navegación */
+.navbar {
+    padding: 15px 20px;
+}
+
+.navbar .btn {
+    font-size: 18px;
+    padding: 10px 20px;
+}
+
+.logo-navbar {
+  height: 80px; /* Ajusta el tamaño del logo */
+  width: auto;
+}
+
+.logo-navbar {
+  height: 50px;
+}  /* Barra de navegación para que sea mas DELGADA */
+
+
+
+
+
+
+.card {
+    border-radius: 15px;
+}
+
+.card h2 {
+    color: #007bff;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.text-muted {
+    color: #6c757d;
+}
+
+.text-muted:hover {
+    text-decoration: underline;
+}
+
+/* Estilo adicional para hacer el card un poco más atractivo */
+.card-body {
+    padding: 2rem;
+}
+
+.header-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    margin-right: 10px;
+}
+
+

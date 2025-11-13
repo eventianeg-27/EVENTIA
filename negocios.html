@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Negocios por categorías</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="navbar.css">
+  <link rel="stylesheet" href="negocios.css">
+
+</head>
+
+<body>
+  <!-- Contenedor para la barra -->
+  <div id="navbar-container"></div>
+
+  <div class="container py-5">
+    <h2 class="text-center mb-4" id="tituloEspecialidad"></h2>
+    <div id="contenedorNegocios" class="row"></div>
+  </div>
+
+  <script type="module" src="negocios.js"></script>
+  <script>
+    // Cargar solo el contenido del navbar (no toda una página HTML)
+    fetch("navbar.html")
+      .then(res => res.text())
+      .then(async html => {
+        document.getElementById("navbar-container").innerHTML = html;
+
+        // Esperar a que navbar.js se cargue completamente
+        const navbarModule = await import("./navbar.js");
+
+
+        // Después de insertar el navbar, agregar funcionalidad
+        document.querySelectorAll(".dropdown-item").forEach(item => {
+          item.addEventListener("click", e => {
+            e.preventDefault();
+            const categoria = item.dataset.categoria;
+            if (categoria) {
+              window.location.href = `negocios.html?categoria=${encodeURIComponent(categoria)}`;
+            }
+          });
+        });
+
+
+        // Detectar si el usuario está logueado
+        const userData = localStorage.getItem("usuarioLogueado");
+        if (userData) {
+
+          // Ocultar login/registro
+          const btnLogin = document.getElementById("btnLogin");
+          if (btnLogin) btnLogin.style.display = "none";
+
+          const btnRegistro = document.querySelector('a[href="Registro.html"]');
+          if (btnRegistro) btnRegistro.style.display = "none";
+
+        }
+
+
+        // Lógica para el botón Regresar
+        const btnRegresar = document.getElementById("btnRegresar");
+        if (btnRegresar) {
+          btnRegresar.addEventListener("click", () => {
+            const userData = localStorage.getItem("usuarioLogueado");
+            if (userData) {
+              window.location.href = "principalpag.html";
+            } else {
+              window.location.href = "index.html";
+            }
+          });
+        }
+      });
+  </script>
+  <!-- Agregar este script para que funcione el menú desplegable de categorías -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+
+</body>
+</html>

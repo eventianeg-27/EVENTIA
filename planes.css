@@ -1,0 +1,62 @@
+    body {
+      background-color: #f2f2f2;
+      font-family: Arial, sans-serif;
+    }
+
+    .planes-container {
+      background: #ffffff;
+      max-width: 600px;
+      margin: 60px auto;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .titulo {
+      background-color: #0c2c4c;
+      color: white;
+      padding: 10px;
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    .btn-plan {
+      padding: 15px;
+      font-weight: bold;
+      display: inline-block;
+      margin: 15px;
+      cursor: pointer;
+      border-radius: 5px;
+      text-decoration: none;
+      color: black;
+    }
+
+    .gratis {
+      background-color: #666;
+      color: white;
+    }
+
+    .premium {
+      background-color: #ffde59;
+    }
+
+    .descripcion {
+      background: white;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-top: 10px;
+      width: 220px;
+      display: inline-block;
+    }
+
+    .finalizar {
+      margin-top: 30px;
+      display: inline-block;
+      background-color: cyan;
+      padding: 10px 20px;
+      color: black;
+      font-weight: bold;
+      border-radius: 5px;
+      text-decoration: none;
+    }

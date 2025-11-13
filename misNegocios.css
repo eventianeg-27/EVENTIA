@@ -1,0 +1,61 @@
+/* ====== Barra de navegación (igual que Registro) ====== */
+.navbar {
+  padding: 15px 20px;
+}
+
+.logo-navbar {
+  height: 80px; /* ✅ Mismo tamaño de logo */
+  width: auto;
+}
+body {
+  background: linear-gradient(to right, #f5f7fa, #c3cfe2);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h2 {
+  font-weight: bold;
+  color: #2c3e50;
+  text-shadow: 1px 1px 2px #aaa;
+}
+
+.logo-negocio {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.card-negocio {
+  max-width: 320px;
+  margin: auto;
+  border: none;
+  border-radius: 20px;
+  background: white;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card-negocio:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.card-title {
+  color: #34495e;
+  font-weight: 600;
+}
+
+.btn-secondary {
+  background-color: #7f8c8d;
+  border: none;
+}
+
+.btn-secondary:hover {
+  background-color: #636e72;
+}
+
+#negociosContainer {
+  margin-top: 30px;
+}

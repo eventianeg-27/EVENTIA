@@ -1,0 +1,77 @@
+<!-- navbar.html -->
+<nav class="navbar navbar-light bg-dark px-4 d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center">
+
+        <!-- Logo -->
+        <img src="logo.png" alt="Logo de Eventia" class="logo-navbar me-2" />
+    </div>
+
+    <div class="d-flex align-items-center w-50 justify-content-between">
+        <div id="buscadorCategorias" class="search-category d-flex align-items-center">
+
+            <input type="text" class="form-control search-box" value="Buscar categoría" readonly id="searchInput">
+            <div class="dropdown">
+                <!-- Botón menú buscar catergoría -->
+                <button class="btn btn-light dropdown-toggle dropdown-btn" type="button" id="dropdownMenu"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu">
+                    <li><a class="dropdown-item" href="#" data-categoria="Fotografía y Video">Fotografía y Video</a>
+                    </li>
+                    <li><a class="dropdown-item" href="#" data-categoria="Decoración y Ambientación">Decoración y
+                            Ambientación</a></li>
+                    <li><a class="dropdown-item" href="#" data-categoria="Renta de Mobiliario">Renta de Mobiliario</a>
+                    </li>
+                    <li><a class="dropdown-item" href="#" data-categoria="Música y Entretenimiento">Música y
+                            Entretenimiento</a></li>
+                    <li><a class="dropdown-item" href="#" data-categoria="Banquete y Bebidas">Banquete y Bebidas</a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 🔹 Aquí se insertará el botón "Reservar" dinámicamente -->
+            <div id="extra-buttons" class="ms-3"></div>
+        </div>
+
+
+    <!-- Botones sesión y hamburguesa -->
+    <div class="d-flex align-items-center">
+        <a href="Registro.html" class="btn btn-primary ms-2 me-2">Registrarse</a>
+        <a href="iniciosesion.html" id="btnLogin" class="btn btn-outline-light">Iniciar Sesión</a>
+
+        <!-- Botón hamburguesa visible siempre -->
+        <button id="menuBtn" class="btn btn-outline-light ms-3">
+            <i class="bi bi-list"></i>
+        </button>
+       </div>
+     </div>
+</nav>
+
+
+
+<!-- Panel lateral oculto -->
+<div id="sidebar" class="sidebar bg-light border-start">
+    <button class="close-btn btn btn-sm btn-danger mt-2 ms-2">X</button>
+    <div class="p-3">
+        <h5>Información del usuario</h5>
+        <p><strong>Usuario:</strong> <span id="usuarioNombre">Cargando...</span></p>
+        <p><strong>Correo:</strong> <span id="usuarioCorreo">Cargando...</span></p>
+    </div>
+
+    <!-- Modo Proveedor (solo texto centrado) -->
+    <div class="p-3 text-center" id="modoProveedorTexto" style="display: none;">
+        <p class="text-success fw-bold mb-0">Modo proveedor activado</p>
+    </div>
+
+
+    <!-- Botón "Mis negocios" -->
+    <div class="p-3" id="btnMisNegociosContainer" style="display: none;">
+        <a href="perfilNegocio.html" class="btn btn-primary w-100">Mis negocios</a>
+    </div>
+
+    <!-- Botón de cerrar sesión -->
+    <div class="p-3">
+        <button class="btn btn-danger w-100" id="cerrarSesionBtn">Cerrar sesión</button>
+    </div>
+</div>

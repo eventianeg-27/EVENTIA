@@ -1,0 +1,55 @@
+/* General */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: hwb(210 97% 2%);
+    color: #333;
+}
+
+/* Barra de navegación */
+.navbar {
+    padding: 15px 20px;
+}
+
+.navbar .btn {
+    font-size: 18px;
+    padding: 10px 20px;
+}
+
+.logo-navbar {
+  height: 80px; /* Ajusta el tamaño del logo */
+  width: auto;
+}
+
+
+/* Contenido Principal */
+main {
+    padding-top: 20px;
+    padding-bottom: 50px;
+}
+
+/* Estilos para imágenes de eventos */
+.img-fluid {
+    height: 250px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.img-fluid:hover {
+    transform: scale(1.05);
+}
+
+
+
+.separator {
+  display: flex;
+  align-items: center;
+  text-align: center;
+}
+
+.separator::before,
+.separator::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid #ccc;
+  margin: 0 10px;
+}

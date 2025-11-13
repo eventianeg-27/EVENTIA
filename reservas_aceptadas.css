@@ -1,0 +1,157 @@
+/* =========================== */
+/* Barra de navegación */
+/* =========================== */
+.navbar {
+  padding: 15px 20px;
+  background-color: #212529;
+}
+
+.logo-navbar {
+  height: 80px;
+  width: auto;
+}
+
+.navbar .btn {
+  font-size: 18px;
+  padding: 10px 20px;
+}
+
+/* =========================== */
+/* Body y contenedor del calendario */
+/* =========================== */
+body {
+  background-color: #f8f9fa;
+}
+
+.calendar-container {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 900px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin: 0 auto;
+}
+
+/* =========================== */
+/* Grilla del calendario */
+/* =========================== */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(120px, 1fr)); /* 7 columnas */
+  gap: 6px;
+}
+
+.calendar-grid > div {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 12px 4px;
+  min-height: 95px;
+  background-color: #fdfdfd;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  cursor: pointer;
+  overflow: visible; /* que el contenido no se corte */
+}
+
+.event-day {
+  background-color: #e7f7e7;
+  border-color: #c7e6c7;
+}
+
+/* =========================== */
+/* Eventos dentro de la celda */
+/* =========================== */
+.event-day .event-info {
+  display: block;
+  max-width: 100%;
+  padding: 4px 6px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  text-align: center;
+  white-space: pre-line;   /* respeta los saltos de línea con <br> */
+  word-break: keep-all;    /* evita romper palabras como el correo */
+  box-sizing: border-box;
+  margin-top: 4px;
+}
+
+.info-btn {
+  margin-top: 4px;
+  width: 100%;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+}
+
+/* =========================== */
+/* Barra de meses */
+/* =========================== */
+.month-bar {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.month-bar button {
+  background: #e9ecef;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.month-bar button.active {
+  background: #0d6efd;
+  color: white;
+}
+
+/* =========================== */
+/* Botones de navegación de meses */
+/* =========================== */
+#prevMonth, #nextMonth {
+  cursor: pointer;
+}
+
+/* =========================== */
+/* Ajustes opcionales de responsividad */
+/* =========================== */
+@media (max-width: 768px) {
+  .calendar-grid {
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  .calendar-grid > div {
+    min-height: 80px;
+    padding: 8px 4px;
+  }
+}
+
+
+
+
+
+/* Cuadro que contiene el evento */
+/* Contenido de cada evento */
+.event-day .event-info {
+  display: block;
+  width: 140px;              /* 🔹 ancho fijo más amplio */
+  max-width: 100%;           
+  padding: 4px 6px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  text-align: center;
+
+  white-space: pre-wrap;     
+  word-wrap: break-word;     
+  overflow: hidden;          
+  text-overflow: ellipsis;   
+
+  box-sizing: border-box;
+  margin-top: 3px;
+}
