@@ -153,6 +153,22 @@ document.getElementById("btnRegistro").addEventListener("click", async () => {
   const horaApertura = document.getElementById("horaApertura").value;
   const horaCierre = document.getElementById("horaCierre").value;
 
+  // Obtener los días seleccionados
+  const diasSeleccionados = [];
+  [
+    "diaLunes", "diaMartes", "diaMiercoles",
+    "diaJueves", "diaViernes", "diaSabado", "diaDomingo"
+  ].forEach(id => {
+    const checkbox = document.getElementById(id);
+    if (checkbox.checked) diasSeleccionados.push(checkbox.value);
+  });
+
+  // Validación: debe elegir al menos un día
+  if (diasSeleccionados.length === 0) {
+    return alert("Por favor, selecciona al menos un día en que el negocio abre.");
+  }
+
+
   // Validación simple
   if (!horaApertura || !horaCierre) {
     return alert("Por favor, seleccione las horas de apertura y cierre.");
@@ -182,7 +198,9 @@ document.getElementById("btnRegistro").addEventListener("click", async () => {
     ubicacionLink, // Guardar el enlace a Google Maps
     especialidad,
     descripcion,
-    horario,
+    diasAbierto: diasSeleccionados,
+    horaApertura: horaApertura,   
+    horaCierre: horaCierre,   
     montoInicial,
     referenciaUbicacion,
     urlImagen: imagenPerfilUrl,

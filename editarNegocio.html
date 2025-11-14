@@ -56,13 +56,47 @@
           Describe un punto de referencia que ayude a ubicar tu negocio físicamente
           (por ejemplo: “Frente a la paletería La Michoacana”, “Junto a la iglesia principal”).
         </p>
-        <textarea class="form-control mb-3" id="referencias"
+        <textarea class="form-control mb-3" id="referenciaUbicacion"
           placeholder="Ejemplo: Frente a la paletería La Michoacana, junto a la ferretería El Sol, etc."
           rows="3"></textarea>
 
         <!-- DISPONIBILIDAD DEL SERVICIO -->
         <hr class="my-4" />
         <h5 class="text-primary"><i class="fas fa-clock me-2"></i>Disponibilidad del servicio</h5>
+
+        <!-- Días de la semana -->
+        <div class="mb-3">
+          <label class="form-label">Días de apertura:</label>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="diaLunes" value="Lunes">
+            <label class="form-check-label" for="diaLunes">Lunes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="diaMartes" value="Martes">
+            <label class="form-check-label" for="diaMartes">Martes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="diaMiercoles" value="Miércoles">
+            <label class="form-check-label" for="diaMiercoles">Miércoles</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="diaJueves" value="Jueves">
+            <label class="form-check-label" for="diaJueves">Jueves</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="diaViernes" value="Viernes">
+            <label class="form-check-label" for="diaViernes">Viernes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="diaSabado" value="Sábado">
+            <label class="form-check-label" for="diaSabado">Sábado</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="diaDomingo" value="Domingo">
+            <label class="form-check-label" for="diaDomingo">Domingo</label>
+          </div>
+        </div>
+
 
         <p class="text-muted small">
           Indica el horario en que tu negocio abre y cierra cada día.

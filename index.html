@@ -7,7 +7,7 @@
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="estilos.css" />
+  <link rel="stylesheet" href="estilos.css" />   <!-- PARA INDEX --- CSS -->
   <link rel="stylesheet" href="principalpag.css" />
   <link rel="stylesheet" href="index.css" /> 
 </head>
@@ -20,26 +20,12 @@
   </div>
 
   <div class="d-flex align-items-center">
-
-    <!-- 🔔 Campanita de notificación -->
-    <div id="notificacionCampana" class="position-relative me-3" style="display:none; cursor:pointer;">
-      <img src="https://cdn-icons-png.flaticon.com/512/1827/1827370.png" alt="Notificaciones" width="28" height="28">
-      <span id="indicadorNotificacion" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
-    </div>
-
     <!-- Buscar categoría -->
     <div class="search-category d-flex align-items-center">
       <input type="text" class="form-control search-box" value="Buscar categoría" readonly id="searchInput">
       <div class="dropdown">
         <button class="dropdown-toggle dropdown-btn" type="button" id="dropdownMenu" data-bs-toggle="dropdown" aria-expanded="false"></button>
         <ul class="dropdown-menu" aria-labelledby="dropdownMenu">
-          <li>
-            <!-- Botón Mis reservaciones con contador -->
-            <a class="dropdown-item position-relative" href="misreservaciones.html" id="btnMisReservaciones">
-              Mis reservaciones
-              <span id="contadorActualizaciones" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none;">0</span>
-            </a>
-          </li>
           <li><a class="dropdown-item" href="#" data-categoria="Fotografía y Video">Fotografía y Video</a></li>
           <li><a class="dropdown-item" href="#" data-categoria="Decoración y Ambientación">Decoración y Ambientación</a></li>
           <li><a class="dropdown-item" href="#" data-categoria="Renta de Mobiliario">Renta de Mobiliario</a></li>
@@ -62,6 +48,7 @@
 </main>
 
 <!-- Carrusel tipo héroe -->
+<!-- Carrusel Héroe de negocios -->
 <section class="carrusel-negocios w-100 mt-2">
   <div class="position-relative overflow-hidden w-100">
     <div id="contenedorCarrusel" class="carousel-slide d-flex transition-all">
@@ -72,12 +59,17 @@
   </div>
 </section>
 
-<!-- Especialidades -->
-<div class="container">
-  <section class="especialidades-section mt-2">
-    <h2 class="text-center mb-5">Elige una categoría</h2>
-    <div class="row row-cols-1 row-cols-md-3 g-4">
 
+
+
+
+
+<!-- Especialidades -->
+  <div class="container">
+<section class="especialidades-section mt-2">
+  <h2 class="text-center mb-5">Elige una categoría</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+      <!-- Tarjetas de especialidades -->
       <div class="col">
         <div class="card h-100" onclick="redirigir('Fotografía y Video')">
           <img src="fotovideo.jpg" class="card-img-top" alt="Fotografía y Video" />
@@ -126,15 +118,17 @@
   </section>
 </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<script>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+
   function redirigir(especialidad) {
     window.location.href = `negocios.html?categoria=${encodeURIComponent(especialidad)}`;
   }
 </script>
 
-<script type="module" src="index.js"></script>
+  <script type="module" src="index.js"></script>
 </body>
 </html>

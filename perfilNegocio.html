@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <title>Perfil del Negocio</title>
   <link rel="stylesheet" href="perfilNegocio.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
@@ -35,6 +36,84 @@
       div.innerHTML = "<p>Faltan datos para mostrar el perfil del negocio.</p>";
     } else {
       const negocioRef = doc(db, "usuarios", usuario, "negocios", negocioId);
+
+
+      // 🔧 Convertir hora 24h → AM/PM
+      function convertirHora(hora24) {
+        if (!hora24 || typeof hora24 !== "string") return "No disponible";
+
+        const partes = hora24.split(":");
+        if (partes.length !== 2) return hora24;
+
+        let h = parseInt(partes[0], 10);
+        let m = partes[1];
+
+        if (isNaN(h)) return hora24;
+
+        const sufijo = h >= 12 ? "PM" : "AM";
+        let h12 = (h % 12) || 12;
+
+        return `${h12}:${m.padStart(2, "0")} ${sufijo}`;
+      }
+
+
+      // 🔥 Ver si hoy está abierto y si está dentro del horario
+      function estaAbiertoHoy(diasAbierto) {
+        const diasSemana = [
+          "Domingo", "Lunes", "Martes", "Miércoles",
+          "Jueves", "Viernes", "Sábado"
+        ];
+
+        const hoy = diasSemana[new Date().getDay()];
+        return diasAbierto?.includes(hoy);
+      }
+
+      // 🔥 Convertir "21:00" a minutos para comparar
+      function aMinutos(hora) {
+        const [h, m] = hora.split(":").map(Number);
+        return h * 60 + m;
+      }
+
+      // 🔥 Saber si está dentro del horario actual
+      function estaEnHorario(horaApertura, horaCierre) {
+        if (!horaApertura || !horaCierre) return false;
+
+        const ahora = new Date();
+        const minutosActual = ahora.getHours() * 60 + ahora.getMinutes();
+
+        const apertura = aMinutos(horaApertura);
+        const cierre = aMinutos(horaCierre);
+
+        // Caso normal (ej: 9 AM → 7 PM)
+        if (apertura < cierre) {
+          return minutosActual >= apertura && minutosActual <= cierre;
+        }
+
+        // Caso cruzando medianoche (ej: 9 PM → 3 AM)
+        return minutosActual >= apertura || minutosActual <= cierre;
+      }
+
+      // 🔥 Genera badge visual
+      function generarEstadoAbierto(datos) {
+        if (!Array.isArray(datos.diasAbierto)) return "";
+
+        const abiertoHoy = estaAbiertoHoy(datos.diasAbierto);
+        const enHorario = estaEnHorario(datos.horaApertura, datos.horaCierre);
+
+        if (abiertoHoy && enHorario) {
+          return `
+      <span class="badge bg-success px-3 py-2" style="font-size:15px;">
+        🟢 Abierto ahora
+      </span>`;
+        }
+
+        return `
+    <span class="badge bg-danger px-3 py-2" style="font-size:15px;">
+      🔴 Cerrado
+    </span>`;
+      }
+
+
 
       getDoc(negocioRef).then(docSnap => {
         if (!docSnap.exists()) {
@@ -85,12 +164,83 @@
                    class="img-fluid rounded shadow-sm" 
                    style="max-width: 400px; border-radius: 10px;"/>
              </div>`
-          : ''}
+              : ''}
 
             <p><strong>Especialidad:</strong> ${datos.especialidad || 'No disponible'}</p>
             <p><strong>Descripción:</strong> ${datos.descripcion || 'No disponible'}</p>
-            <p><strong>Horario:</strong> ${datos.horario || 'No disponible'}</p>
-            <p><strong>Monto Inicial:</strong> $${datos.montoInicial || '0'}</p>
+            
+            <!-- Días y Horario -->
+<div class="mt-4">
+  <h5 class="text-primary">
+    <i class="fas fa-calendar-week me-2"></i>Disponibilidad
+   </h5>
+
+  <!-- Estado actual (Abierto o Cerrado) -->
+  <p>
+    <strong>Estado:</strong>
+    ${(() => {
+              if (!datos.horaApertura || !datos.horaCierre || !datos.diasAbierto) {
+                return `<span class="text-muted">No disponible</span>`;
+              }
+
+              const ahora = new Date();
+              const diaSemana = [
+                "Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"
+              ][ahora.getDay()];
+
+              // Si hoy no abre
+              if (!datos.diasAbierto.includes(diaSemana)) {
+                return `<span style="color: red; font-weight: bold;">🔴 Cerrado</span>`;
+              }
+
+              // Obtener hora actual en formato HH:MM
+              const horaActual = ahora.getHours() * 60 + ahora.getMinutes();
+
+              const [hA, mA] = datos.horaApertura.split(":").map(n => parseInt(n));
+              const [hC, mC] = datos.horaCierre.split(":").map(n => parseInt(n));
+
+              const aperturaMin = hA * 60 + mA;
+              const cierreMin = hC * 60 + mC;
+
+              // Validación de estado
+              const abierto = horaActual >= aperturaMin && horaActual <= cierreMin;
+
+              return abierto
+                ? `<span style="color: green; font-weight: bold;">🟢 Abierto ahora</span>`
+                : `<span style="color: red; font-weight: bold;">🔴 Cerrado</span>`;
+            })()}
+  </p>
+
+  <!-- Días con insignias -->
+  <p><strong>Días abiertos:</strong></p>
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    ${Array.isArray(datos.diasAbierto)
+              ? datos.diasAbierto.map(dia => `
+          <span class="badge bg-primary px-3 py-2 d-flex align-items-center" style="font-size: 14px;">
+            <i class="fa-solid fa-calendar-day me-2"></i> ${dia}
+          </span>
+        `).join("")
+              : `<span class="text-muted">No disponible</span>`
+            }
+  </div>
+
+  <!-- Horario (barra verde bonita) -->
+  <p><strong>Horario:</strong></p>
+  <div class="ms-2">
+    ${datos.horaApertura && datos.horaCierre
+              ? `
+        <span class="badge bg-success px-3 py-2" style="font-size: 15px;">
+          <i class="fas fa-clock me-2"></i>
+          ${convertirHora(datos.horaApertura)} — ${convertirHora(datos.horaCierre)}
+        </span>
+      `
+              : `<span class="text-muted">No disponible</span>`
+            }
+  </div>
+</div>
+
+
+            <br> <p><strong>Monto Inicial:</strong> $${datos.montoInicial || '0'}</p>
             
             <h5>Redes Sociales:</h5>
             <ul>${redesHTML}</ul>
@@ -127,7 +277,7 @@
 <body>
 
   <div class="container py-5">
-    
+
     <div id="contenidoProveedor" class="mt-2"></div>
 
 
