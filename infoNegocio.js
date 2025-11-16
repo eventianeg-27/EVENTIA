@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-// ✅ Configuración de Firebase corregida (del primer código)
+// ✅ Configuración de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBhX59jBh2tUkEnEGcb9sFVyW2zJe9NB_w",
   authDomain: "eventia-9ead3.firebaseapp.com",
@@ -72,12 +72,11 @@ if (!negocioId || !proveedorId) {
         <h5>Redes Sociales:</h5>
         <ul>${redesHTML}</ul>
         <p><strong>Monto Inicial:</strong> $${datos.montoInicial}</p>
-        
       `;
 
-      // Mostrar galería a la izquierda
+      // Mostrar galería
       if (galeriaDiv) {
-        galeriaDiv.innerHTML = ""; // Limpiar antes de insertar
+        galeriaDiv.innerHTML = "";
 
         if (Array.isArray(datos.evidencias) && datos.evidencias.length > 0) {
           datos.evidencias.forEach(url => {
@@ -97,8 +96,6 @@ if (!negocioId || !proveedorId) {
         }
       }
 
-
-
     } else {
       div.innerHTML = "<p>No se encontró información del negocio.</p>";
     }
@@ -108,18 +105,17 @@ if (!negocioId || !proveedorId) {
   });
 }
 
-// Acción para el botón RESERVAR
+// ================================
+// 🔹 Botón RESERVAR
+// ================================
 window.irAReservar = () => {
   const usuarioLogueado = JSON.parse(localStorage.getItem("usuarioLogueado"));
   const negocioId = localStorage.getItem("negocioSeleccionado")?.trim();
   const proveedorId = localStorage.getItem("usuarioNegocio")?.trim();
 
-  // Guardar con las claves que reservar.js espera
   if (negocioId && proveedorId) {
     localStorage.setItem("negocioId", negocioId);
     localStorage.setItem("usuarioId", proveedorId);
-  } else {
-    console.warn("Faltan datos del negocio o proveedor");
   }
 
   if (usuarioLogueado && usuarioLogueado.correo) {
@@ -130,7 +126,9 @@ window.irAReservar = () => {
   }
 };
 
-// Lógica para el botón Regresar
+// ================================
+// 🔹 Botón REGRESAR
+// ================================
 const btnRegresar = document.getElementById("btnRegresar");
 if (btnRegresar) {
   btnRegresar.addEventListener("click", () => {
@@ -143,3 +141,38 @@ if (btnRegresar) {
     }
   });
 }
+
+
+
+// ================================
+// 🔹 CONTROL DEL LOGO SEGÚN SESIÓN
+// ================================
+import { getAuth, onAuthStateChanged } 
+  from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+
+document.addEventListener("DOMContentLoaded", () => {
+  const logo = document.getElementById("logoEventia");
+  if (!logo) return;
+
+  const authLogo = getAuth();
+
+  onAuthStateChanged(authLogo, (user) => {
+    // Limpiar listeners anteriores
+    logo.onclick = null;
+
+    logo.style.cursor = "pointer";
+
+    if (!user) {
+      // Usuario NO ha iniciado sesión → ir a index.html
+      logo.addEventListener("click", () => {
+        window.location.href = "index.html";
+      });
+    } else {
+      // Usuario ha iniciado sesión → ir a principalpag.html
+      logo.addEventListener("click", () => {
+        window.location.href = "principalpag.html";
+      });
+    }
+  });
+});
+

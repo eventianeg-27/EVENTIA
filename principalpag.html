@@ -9,6 +9,14 @@
   <link rel="stylesheet" href="principalpag.css">
 </head>
 
+<!-- Función necesaria para redireccionar las categorías -->
+<script>
+  function redirigir(especialidad) {
+    localStorage.setItem("especialidadSeleccionada", especialidad);
+    window.location.href = "negocios.html";
+  }
+</script>
+
 <body>
   <!-- Barra de Navegación -->
   <nav class="navbar navbar-light bg-dark px-4 d-flex justify-content-between align-items-center">
@@ -100,6 +108,7 @@
   <div class="container py-5">
     <h2 class="text-center mb-5">Elige una categoría</h2>
     <div class="row g-4">
+
       <div class="col-md-4">
         <div class="card h-100" onclick="redirigir('Fotografía y Video')">
           <img src="fotovideo.jpg" class="card-img-top" alt="Fotografía y Video">
@@ -144,6 +153,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </div>
 

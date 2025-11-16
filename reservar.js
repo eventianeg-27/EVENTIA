@@ -135,20 +135,38 @@ async function guardarReservaEnAmbosLados(proveedorId, negocioId, clienteId, res
 }
 
 // ==========================
-// 🔹 Escuchar login y enviar formulario
+// 🔹 Escuchar login y prefill correo (si hay usuario)
 // ==========================
 onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    alert("Debes iniciar sesión para hacer una reservación.");
-    return;
+  // Si no hay usuario, no hacemos redirect aquí — el submit lo validará.
+  if (user) {
+    const clienteId = (user.email || user.uid || "").toLowerCase().trim();
+
+    // 🔥 PRELLENAR AUTOMÁTICAMENTE EL CORREO DEL USUARIO LOGUEADO
+    const campoCorreo = document.getElementById("correo");
+    if (campoCorreo) campoCorreo.value = clienteId;
   }
+});
 
-  const clienteId = (user.email || user.uid || "").toLowerCase().trim();
-  const form = document.getElementById("formReserva");
-  if (!form) return;
-
+// ==========================
+// 🔹 Siempre registrar el submit del formulario y validar sesión en el submit
+// ==========================
+const form = document.getElementById("formReserva");
+if (form) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+
+    // Verificamos el usuario actual aquí (seguro y en el momento del submit)
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      // No hay sesión -> avisar y redirigir a iniciar/registrar
+      alert("Debes iniciar sesión o registrarte antes de hacer una reservación.");
+      window.location.href = "iniciaregis.html";
+      return;
+    }
+
+    // Si hay usuario, reconstruimos clienteId desde el usuario actual (más seguro)
+    const clienteId = (currentUser.email || currentUser.uid || "").toLowerCase().trim();
 
     const fechaInput = document.getElementById("fecha").value;
 
@@ -175,7 +193,7 @@ onAuthStateChanged(auth, (user) => {
       telefono: document.getElementById("telefono").value.trim(),
       correoCliente: clienteId,
       fechaStr: fechaInput,
-      fechaTimestamp: fechaTimestamp, // ✅ ahora siempre válido
+      fechaTimestamp: fechaTimestamp,
       hora: document.getElementById("hora").value,
       ubicacion: document.getElementById("ubicacion").value.trim(),
       asistentes: document.getElementById("asistentes").value || "No especificado",
@@ -194,4 +212,4 @@ onAuthStateChanged(auth, (user) => {
     alert("✅ Reservación guardada con éxito.");
     window.location.href = "misreservaciones.html";
   });
-});
+}
