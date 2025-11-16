@@ -122,7 +122,7 @@ window.irAReservar = () => {
     window.location.href = "reservar.html";
   } else {
     localStorage.setItem("redirigirAReserva", "true");
-    window.location.href = "IniciaRegis.html";
+    window.location.href = "iniciaRegis.html";
   }
 };
 
