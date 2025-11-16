@@ -161,7 +161,7 @@ if (form) {
     if (!currentUser) {
       // No hay sesión -> avisar y redirigir a iniciar/registrar
       alert("Debes iniciar sesión o registrarte antes de hacer una reservación.");
-      window.location.href = "iniciaregis.html";
+      window.location.href = "iniciaRegis.html";
       return;
     }
 
