@@ -34,24 +34,21 @@ const auth = getAuth(app);
 // 🔹 Obtener proveedorId desde localStorage
 // ==========================
 function getProveedorIdFromLocalStorage() {
-  const posibles = [
-    localStorage.getItem("usuarioId"),
-    localStorage.getItem("usuarioNegocio"),
-    localStorage.getItem("proveedorId")
-  ];
-  for (const v of posibles) if (v) return v.trim();
+  try {
+    const usuario = JSON.parse(localStorage.getItem("usuarioLogueado") || "{}");
 
-  const userData = localStorage.getItem("usuarioLogueado");
-  if (userData) {
-    try {
-      const parsed = JSON.parse(userData);
-      return (parsed.correo || parsed.usuario || parsed.usuarioMinusculas || "").trim();
-    } catch {
-      if (userData.includes("@")) return userData.trim();
+    if (usuario.correo) {
+      return usuario.correo.toLowerCase();
     }
-  }
+
+    const prov = localStorage.getItem("proveedorId");
+    if (prov) return prov.toLowerCase();
+
+  } catch {}
+
   return null;
 }
+
 
 // ==========================
 // 🔹 Función para formatear fecha

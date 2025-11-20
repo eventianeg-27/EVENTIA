@@ -17,16 +17,19 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+
 // ✅ Mostrar el plan elegido
 document.addEventListener("DOMContentLoaded", () => {
-  const plan = localStorage.getItem('planSeleccionado');
-  if (plan) {
-    const planElemento = document.getElementById('planElegido');
+  const planTexto = localStorage.getItem("planTexto");
+
+  if (planTexto) {
+    const planElemento = document.getElementById("planElegido");
     if (planElemento) {
-      planElemento.textContent = `Plan elegido: ${plan}`;
+      planElemento.textContent = `Plan elegido: ${planTexto}`;
     }
   }
 });
+
 
 // Establecer proveedorId si no existe pero nombreUsuario sí
 if (!localStorage.getItem("proveedorId") && localStorage.getItem("usuarioLogueado")) {

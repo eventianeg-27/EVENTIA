@@ -1,7 +1,7 @@
 // ==========================
 // 🔧 Conexión a Firebase
 // ==========================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import {
   getFirestore,
   collection,
@@ -9,8 +9,8 @@ import {
   doc,
   getDoc,
   onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBhX59jBh2tUkEnEGcb9sFVyW2zJe9NB_w",
@@ -100,7 +100,7 @@ if (cerrarSesionBtn) {
 }
 
 // ==========================
-// Validar cantidad de negocios
+// VALIDAR CANTIDAD DE NEGOCIOS (REGLA NUEVA)
 // ==========================
 const btnRegistroNegocio = document.getElementById("btnRegistroNegocio");
 if (btnRegistroNegocio) {
@@ -114,11 +114,15 @@ if (btnRegistroNegocio) {
 
     const negociosRef = collection(db, "usuarios", usuarioLogueado.correo, "negocios");
     const negociosSnap = await getDocs(negociosRef);
+    const cantidad = negociosSnap.size;
 
-    if (negociosSnap.size >= 2) {
-      alert("Solo puedes registrar hasta 2 negocios.");
-    } else {
+    // NUEVA LÓGICA QUE PEDISTE
+    if (cantidad === 0) {
+      window.location.href = "planes.html";
+    } else if (cantidad === 1) {
       window.location.href = "NegoRegistro.html";
+    } else if (cantidad >= 2) {
+      alert("Solo puedes registrar hasta 2 negocios.");
     }
   });
 }
@@ -174,12 +178,26 @@ async function cargarNegociosRecientes() {
   const recientes = negocios.slice(0, 10);
 
   recientes.forEach((negocio) => {
+
+    // 📌 **PRIORIDAD NUEVA DE IMÁGENES**
+    const imgPrincipal =
+      negocio.evidencias?.[0] ||
+      negocio.urlImagen ||
+      negocio.fotoPerfil ||
+      "https://via.placeholder.com/300x200";
+
+    const imgPerfil =
+      negocio.fotoPerfil ||
+      negocio.urlImagen ||
+      negocio.evidencias?.[0] ||
+      "https://via.placeholder.com/100";
+
     const slide = document.createElement("div");
     slide.className = "card-slide";
     slide.innerHTML = `
-      <div class="card-negocio" style="background-image: url('${negocio.urlImagen || 'https://via.placeholder.com/300x200'}');">
+      <div class="card-negocio" style="background-image: url('${imgPrincipal}');">
         <div class="foto-perfil-circular">
-          <img src="${negocio.urlImagen || 'https://via.placeholder.com/100'}" alt="Perfil">
+          <img src="${imgPerfil}" alt="Perfil">
         </div>
         <div class="info-negocio">
           <h5 class="titulo-negocio">${negocio.negocio}</h5>
@@ -231,17 +249,13 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 // ==========================
-// 🔔 Notificaciones para el cliente
-// ==========================
-// ==========================
-// 🔔 Escuchar cambios reales de reservas del cliente
+// 🔔 Notificaciones
 // ==========================
 function escucharCambiosReservasCliente(clienteCorreo) {
   const vistas = JSON.parse(localStorage.getItem("reservasVistas") || "[]");
   const campana = document.getElementById("notificacionIcono");
   const contador = document.getElementById("contadorReservas");
 
-  // Ocultar por defecto
   if (campana) campana.style.display = "none";
   if (contador) contador.style.display = "none";
 
@@ -251,7 +265,6 @@ function escucharCambiosReservasCliente(clienteCorreo) {
     proveedores.forEach(proveedorDoc => {
       const proveedorId = proveedorDoc.id;
 
-      // Escuchar cada negocio del proveedor
       const reservasRecibidasRef = collection(db, "usuarios", proveedorId, "reservas_recibidas");
       getDocs(reservasRecibidasRef).then(reservasSnap => {
         reservasSnap.forEach(reservaDoc => {
@@ -273,13 +286,11 @@ function escucharCambiosReservasCliente(clienteCorreo) {
 
             snapshot.forEach(rDoc => {
               const data = rDoc.data();
-              // Detectar reservas con cambio de estado y no vistas
               if (data.estado !== "pendiente" && !data.vistoPorCliente) {
                 nuevas.push(rDoc.id);
               }
             });
 
-            // Mostrar notificación solo si hay nuevas no vistas
             if (nuevas.length > 0) {
               if (campana) campana.style.display = "inline-block";
               if (contador) {
@@ -300,7 +311,6 @@ function escucharCambiosReservasCliente(clienteCorreo) {
     console.error("Error al escuchar cambios de reservas:", err);
   });
 }
-
 
 document.addEventListener("DOMContentLoaded", () => {
   const usuarioLogueado = JSON.parse(localStorage.getItem("usuarioLogueado") || "{}");

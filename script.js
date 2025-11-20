@@ -107,10 +107,21 @@ window.submitUserOnly = async function () {
   let usuarioMinusculas = usuarioOriginal.toLowerCase();
   const correo = document.getElementById("correo").value.trim();
   const contraseña = document.getElementById("contraseña").value.trim();
+  const confirmarContraseña = document.getElementById("confirmarContraseña").value.trim();
   const mensajeError = document.getElementById("mensaje-error");
 
-  if (!usuarioOriginal || !correo || !contraseña) {
+  // Limpiar mensaje previo
+  mensajeError.innerText = "";
+
+  // Validar campos vacíos
+  if (!usuarioOriginal || !correo || !contraseña || !confirmarContraseña) {
     mensajeError.innerText = "Por favor, completa todos los campos.";
+    return;
+  }
+
+  // Validar confirmación de contraseña
+  if (contraseña !== confirmarContraseña) {
+    mensajeError.innerText = "Las contraseñas no coinciden.";
     return;
   }
 
@@ -132,7 +143,7 @@ window.submitUserOnly = async function () {
 
   try {
     const userData = {
-      usuario: usuarioOriginal,            // 👉 nombre con formato original
+      usuario: usuarioOriginal,
       usuarioMinusculas: usuarioMinusculas,
       correo: correo,
       contraseña: contraseña,
@@ -143,7 +154,7 @@ window.submitUserOnly = async function () {
     await setDoc(userDocRef, userData);
 
     // Guardar sesión
-    localStorage.setItem("nombreUsuario", correo); // ahora clave = correo
+    localStorage.setItem("nombreUsuario", correo);
     localStorage.setItem("usuarioLogueado", JSON.stringify(userData));
 
     alert("Usuario registrado correctamente.");

@@ -221,6 +221,29 @@
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  
+  <script>
+  // VALIDAR QUE EXISTA PLAN AL ENTRAR AL REGISTRO
+  document.addEventListener("DOMContentLoaded", () => {
+    const plan = localStorage.getItem("planSeleccionado");
+
+    // ❌ Si no hay plan, sacar al usuario a planes.html
+    if (!plan) {
+      alert("Debes elegir un plan antes de registrar un negocio.");
+      window.location.href = "planes.html";
+      return;
+    }
+
+    // ✔️ Mostrar el plan seleccionado en pantalla
+    const planElemento = document.getElementById("planElegido");
+    if (planElemento) {
+      planElemento.textContent = "Plan elegido: " + plan;
+    }
+  });
+</script>
+
+
   <script type="module" src="negoregistro.js"></script>
 
   <!-- Script para mostrar el campo de red social -->

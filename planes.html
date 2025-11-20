@@ -1,41 +1,130 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Planes - Eventia</title>
+
+  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
   <link rel="stylesheet" href="planes.css" />
 </head>
+
 <body>
   <div class="planes-container">
     <div class="titulo">PLANES</div>
     <h5 class="mt-4">Seleccione el plan de su elección</h5>
 
-    <div>
-      <div class="btn-plan gratis" onclick="elegirPlan('gratis')">PRUEBA GRATIS ➡️</div>
-      <div class="btn-plan premium" onclick="elegirPlan('premium')">PLAN PREMIUM ➡️</div>
-    </div>
+    <div class="planes-box">
 
-    <div>
-      <div class="descripcion">
-        <strong>Podrás recibir reservaciones durante un mes<br>y aceptar 20 clientes</strong>
+      <!-- PLAN BÁSICO -->
+      <div class="plan-card basico">
+        <i class="bi bi-stars icon-plan"></i>
+        <h3>Plan Básico – Gratis</h3>
+        <p>✔ Registrar <strong>1 negocio</strong></p>
+        <p>✔ Hasta <strong>2 especialidades</strong></p>
+        <p>✔ Visibilidad estándar</p>
+        <div class="btn-seleccionar" onclick="elegirPlan('basico')">SELECCIONAR</div>
       </div>
-      <div class="descripcion">
-        <strong>Incluye 6 MESES<br><br>Podrás aceptar una cantidad de 300 clientes</strong>
+
+      <!-- PLAN PLUS -->
+      <div class="plan-card plus">
+        <i class="bi bi-rocket-takeoff icon-plan"></i>
+        <h3>Plan Plus</h3>
+        <p>✔ Registrar <strong>2 negocios</strong></p>
+        <p>✔ Hasta <strong>5 especialidades</strong></p>
+        <p>✔ Visibilidad estándar</p>
+        <div class="btn-seleccionar" onclick="elegirPlan('plus')">SELECCIONAR</div>
       </div>
+
+      <!-- PLAN PREMIUM -->
+      <div class="plan-card premium">
+        <i class="bi bi-award-fill icon-plan"></i>
+        <h3>Plan Premium</h3>
+        <p>✔ Registrar <strong>3 negocios</strong></p>
+        <p>✔ Hasta <strong>5 especialidades</strong></p>
+        <p>✔ Aparición en <strong>carrusel principal</strong></p>
+        <div class="btn-seleccionar" onclick="elegirPlan('premium')">SELECCIONAR</div>
+      </div>
+
     </div>
   </div>
 
-<script>
-  function elegirPlan(plan) {
-    if (plan === 'gratis') {
-      window.location.href = 'NegoRegistro.html';
-    } else if (plan === 'premium') {
-      alert("Funcionalidad de plan Premium próximamente.");
-    }
-  }
-</script>
-</body>
-</html>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import {
+      getFirestore, doc, updateDoc, setDoc
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
+    // 🔥 CONFIG FIREBASE
+    const firebaseConfig = {
+      apiKey: "AIzaSyBhX59jBh2tUkEnEGcb9sFVyW2zJe9NB_w",
+      authDomain: "eventia-9ead3.firebaseapp.com",
+      projectId: "eventia-9ead3",
+      storageBucket: "eventia-9ead3.appspot.com",
+      messagingSenderId: "313661648136",
+      appId: "1:313661648136:web:1c9eb73bbb3f78994c90bd",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ==========================================================
+    // FUNCIÓN PARA GUARDAR EL PLAN LOCAL Y EN FIRESTORE
+    // ==========================================================
+    async function elegirPlan(plan) {
+
+      // Guardamos en localStorage para usarlo en principalpag.html
+      localStorage.setItem("planSeleccionado", plan);
+
+
+      // Guardar nombre para mostrarlo luego
+      if (plan === "basico") localStorage.setItem("planTexto", "Básico");
+      if (plan === "plus") localStorage.setItem("planTexto", "Plus");
+      if (plan === "premium") localStorage.setItem("planTexto", "Premium");
+
+      // Si además quieres guardarlo en Firestore,
+      // usamos el correo del usuario guardado en localStorage
+      const usuarioLogueado = JSON.parse(localStorage.getItem("usuarioLogueado") || "{}");
+
+      if (usuarioLogueado.correo) {
+        const userRef = doc(db, "usuarios", usuarioLogueado.correo);
+
+        try {
+          await updateDoc(userRef, { plan: plan })
+            .catch(async () => {
+              await setDoc(userRef, { plan: plan });
+            });
+        } catch (e) {
+          console.warn("No se pudo guardar el plan en Firestore:", e);
+        }
+      }
+
+      // Redirecciones por plan elegido
+      if (plan === "basico") {
+        window.location.href = "negoregistro.html";
+        return;
+      }
+
+      if (plan === "plus") {
+        alert("Plan Plus próximamente.");
+        return;
+      }
+
+      if (plan === "premium") {
+        alert("Plan Premium próximamente.");
+        return;
+      }
+    }
+
+    window.elegirPlan = elegirPlan;
+  </script>
+
+</body>
+
+</html>
