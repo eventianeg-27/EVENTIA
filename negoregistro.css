@@ -3,7 +3,8 @@ body {
   font-family: 'Segoe UI', sans-serif;
 }
 
-h2, h3 {
+h2,
+h3 {
   color: #2c3e50;
 }
 
@@ -154,4 +155,118 @@ input[type="time"] {
   border: 1px solid #ced4da;
   padding: 8px;
   font-size: 1rem;
+}
+
+
+
+
+/* ---- Estilos para tarjetas de especialidad (profesional) ---- */
+.especialidades-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media(min-width: 768px) {
+  .especialidades-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.card-especialidad {
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #e6e6e6;
+  background: linear-gradient(180deg, #ffffff, #fbfbfb);
+  box-shadow: 0 6px 18px rgba(15, 15, 15, 0.05);
+  position: relative;
+}
+
+.card-especialidad .badge-position {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.card-especialidad h6 {
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.evidencias-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.evidencia-thumb {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.btn-remove-evid {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+}
+
+.btn-add-especialidad {
+  margin-top: 8px;
+}
+
+.small-muted {
+  font-size: 0.85rem;
+  color: #6b6b6b;
+}
+
+/* pequeño estilo para el texto del plan */
+#planElegido {
+  font-weight: 600;
+  color: #0d6efd;
+}
+
+/* boton eliminar tarjeta */
+.btn-eliminar-tarjeta {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  font-size: 0.85rem;
+}
+
+/* quitar outline en inputs file invisibles */
+input[type="file"] {
+  outline: none;
+}
+
+
+/* --- Miniaturas medianas en grid 2x2 --- */
+.evidencias-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  /* 2 columnas */
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.evidencia-thumb {
+  width: 100%;
+  height: 150px;
+  /* tamaño mediano */
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid #ddd;
+}
+
+.evidencia-wrapper {
+  position: relative;
+}
+
+.btn-remove-evid {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  border-radius: 50%;
 }

@@ -81,7 +81,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   localStorage.setItem("proveedorId", usuarioLogueado.correo);
+
+
+  // ==========================
+  // 🟡 Mostrar plan elegido
+  // ==========================
+  const planElegido = localStorage.getItem("planTexto");
+
+  // Mostrar plan elegido dentro del menú
+  const btnPlanesMenu = document.getElementById("btnPlanesMenu");
+
+  if (btnPlanesMenu && planElegido) {
+    // Crear etiqueta debajo del botón
+    const etiquetaPlan = document.createElement("p");
+    etiquetaPlan.className = "text-center fw-bold mt-2 text-success";
+    etiquetaPlan.textContent = "Plan actual: " + planElegido;
+
+    btnPlanesMenu.appendChild(etiquetaPlan);
+  }
+
 });
+
+
 
 // ==========================
 // Cerrar sesión
