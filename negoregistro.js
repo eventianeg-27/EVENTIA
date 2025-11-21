@@ -18,7 +18,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 
-// ✅ Mostrar el plan elegido
+// Mostrar el plan elegido
 document.addEventListener("DOMContentLoaded", () => {
   const planTexto = localStorage.getItem("planTexto");
 
@@ -59,6 +59,214 @@ async function subirImagenACloudinary(file, proveedorId) {
   const data = await response.json();
   return data.secure_url;
 }
+
+
+
+
+// -----------------------
+// Estado para especialidades
+// -----------------------
+const MAX_ESPECIALIDADES = 2;
+let especialidadesState = []; // array de objetos {nombre, descripcion, archivos: [File,...]}
+const especialidadesContainer = document.getElementById("especialidadesContainer");
+const btnAgregarEspecialidad = document.getElementById("btnAgregarEspecialidad");
+
+// inicializar con 1 tarjeta
+document.addEventListener("DOMContentLoaded", () => {
+  agregarTarjetaEspecialidad();
+});
+
+// función para crear una tarjeta
+function agregarTarjetaEspecialidad() {
+  if (especialidadesState.length >= MAX_ESPECIALIDADES) {
+    alert(`Solo puedes agregar hasta ${MAX_ESPECIALIDADES} especialidades.`);
+    return;
+  }
+
+  const index = especialidadesState.length;
+  // estado inicial
+  especialidadesState.push({
+    nombre: "",
+    descripcion: "",
+    archivos: [] // Files locales; se subirán al enviar
+  });
+
+  const card = document.createElement("div");
+  card.className = "card-especialidad";
+  card.dataset.index = index;
+
+  card.innerHTML = `
+    <div class="badge-position">
+      <span class="badge bg-secondary">#${index + 1}</span>
+    </div>
+
+    <h6>Especialidad ${index + 1}</h6>
+
+    <div class="mb-2">
+      <select class="form-select select-especialidad mb-2" data-index="${index}">
+        <option value="">Seleccione una</option>
+        <option>Fotografía y Video</option>
+        <option>Decoración y Ambientación</option>
+        <option>Renta de Mobiliario</option>
+        <option>Música y Entretenimiento</option>
+        <option>Banquete y Bebidas</option>
+      </select>
+      <textarea class="form-control descripcion-especialidad" data-index="${index}" placeholder="Descripción breve del servicio"></textarea>
+    </div>
+
+    <div>
+      <button type="button" class="btn btn-outline-primary btn-sm btn-evidencia" data-index="${index}">
+        <i class="fas fa-paperclip me-1"></i> Subir fotos / videos
+      </button>
+      <br><small class="small-muted d-block mt-2">Hasta 4 archivos por especialidad (imágenes o videos)</small>
+
+      <div class="evidencias-list" id="evidencias-list-${index}"></div>
+    </div>
+
+    <br><button type="button" class="btn btn-danger btn-sm btn-eliminar-tarjeta" data-index="${index}">Eliminar</button>
+  `;
+
+  especialidadesContainer.appendChild(card);
+
+  // referencias a los botones / inputs
+  const btnEvid = card.querySelector(".btn-evidencia");
+  const select = card.querySelector(".select-especialidad");
+  const textarea = card.querySelector(".descripcion-especialidad");
+  const btnEliminar = card.querySelector(".btn-eliminar-tarjeta");
+
+  // crear input file invisible por tarjeta
+  const inputFile = document.createElement("input");
+  inputFile.type = "file";
+  inputFile.accept = "image/*,video/*";
+  inputFile.multiple = true;
+  inputFile.style.display = "none";
+  inputFile.dataset.index = index;
+  document.body.appendChild(inputFile);
+
+  btnEvid.addEventListener("click", () => {
+    const current = especialidadesState[index];
+
+    // 🚫 BLOQUEAR el botón si ya hay 4 archivos
+    if (current.archivos.length >= 4) {
+      alert("Máximo 4 archivos por especialidad.");
+      return;
+    }
+
+    inputFile.click();
+  });
+
+
+  inputFile.addEventListener("change", (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const current = especialidadesState[index];
+    // limitar a 6 archivos por especialidad
+    if ((current.archivos.length + files.length) > 4) {
+      alert("Máximo 4 archivos por especialidad.");
+      return;
+    }
+
+    files.forEach(f => current.archivos.push(f));
+    renderEvidenciasTarjeta(index);
+    // limpiar input para permitir seleccionar mismo archivo luego
+    inputFile.value = "";
+  });
+
+  select.addEventListener("change", (e) => {
+    especialidadesState[index].nombre = e.target.value;
+  });
+
+  textarea.addEventListener("input", (e) => {
+    especialidadesState[index].descripcion = e.target.value;
+  });
+
+  btnEliminar.addEventListener("click", () => {
+    // si solo hay 1 tarjeta, no permitir eliminarla (mínimo 1)
+    if (especialidadesState.length <= 1) {
+      alert("Debe existir al menos una especialidad.");
+      return;
+    }
+    eliminarTarjeta(index);
+  });
+
+  actualizarBotonAgregar();
+  renderEvidenciasTarjeta(index);
+}
+
+// renderizar miniaturas de evidencias de una tarjeta
+function renderEvidenciasTarjeta(index) {
+  const listEl = document.getElementById(`evidencias-list-${index}`);
+  if (!listEl) return;
+  listEl.innerHTML = "";
+  listEl.classList.add("evidencias-grid");
+
+
+  const archivos = especialidadesState[index].archivos || [];
+  archivos.forEach((file, i) => {
+    const wrapper = document.createElement("div");
+    wrapper.style.position = "relative";
+
+    const elemento = document.createElement(file.type.startsWith("image/") ? "img" : "video");
+    elemento.className = "evidencia-thumb";
+    elemento.src = URL.createObjectURL(file);
+    if (file.type.startsWith("video/")) elemento.controls = true;
+
+    const btnRemove = document.createElement("button");
+    btnRemove.className = "btn btn-sm btn-danger btn-remove-evid";
+    btnRemove.textContent = "✕";
+    btnRemove.style.position = "absolute";
+    btnRemove.style.top = "-6px";
+    btnRemove.style.right = "-6px";
+
+    btnRemove.addEventListener("click", () => {
+      especialidadesState[index].archivos.splice(i, 1);
+      renderEvidenciasTarjeta(index);
+    });
+
+    wrapper.appendChild(elemento);
+    wrapper.appendChild(btnRemove);
+    listEl.appendChild(wrapper);
+  });
+}
+
+// eliminar tarjeta por index y reindexar
+function eliminarTarjeta(index) {
+  // Evitar eliminar si solo hay 1 tarjeta
+  if (especialidadesState.length <= 1) {
+    alert("Debe existir al menos una especialidad.");
+    return;
+  }
+
+  // Solo ocultar la tarjeta del DOM
+  const card = especialidadesContainer.querySelector(`[data-index="${index}"]`);
+  if (card) {
+    card.style.display = "none";  // Solo ocultarla
+    card.classList.add("tarjeta-eliminada");
+  }
+
+  // Marcar internamente como eliminada (pero no borrar su info)
+  especialidadesState[index].eliminada = true;
+
+  actualizarBotonAgregar();
+}
+
+
+// actualizar estado del botón agregar
+function actualizarBotonAgregar() {
+  if (especialidadesState.length >= MAX_ESPECIALIDADES) {
+    btnAgregarEspecialidad.disabled = true;
+    btnAgregarEspecialidad.classList.add("disabled");
+  } else {
+    btnAgregarEspecialidad.disabled = false;
+    btnAgregarEspecialidad.classList.remove("disabled");
+  }
+}
+
+btnAgregarEspecialidad.addEventListener("click", () => {
+  agregarTarjetaEspecialidad();
+});
+
 
 // Variables para URL de imagen de perfil y evidencias
 let imagenPerfilUrl = "";
@@ -202,8 +410,8 @@ document.getElementById("btnRegistro").addEventListener("click", async () => {
     especialidad,
     descripcion,
     diasAbierto: diasSeleccionados,
-    horaApertura: horaApertura,   
-    horaCierre: horaCierre,   
+    horaApertura: horaApertura,
+    horaCierre: horaCierre,
     montoInicial,
     referenciaUbicacion,
     urlImagen: imagenPerfilUrl,
@@ -371,3 +579,43 @@ document.getElementById("btnCancelar").addEventListener("click", () => {
     window.location.href = "principalpag.html";
   }
 });
+
+
+
+
+function reindexarTarjetas() {
+  const tarjetas = [...especialidadesContainer.querySelectorAll(".card-especialidad:not(.tarjeta-eliminada)")];
+
+  tarjetas.forEach((card, newIndex) => {
+    // Cambiar data-index del contenedor
+    card.dataset.index = newIndex;
+
+    // Cambiar número del badge
+    const badge = card.querySelector(".badge");
+    badge.textContent = `#${newIndex + 1}`;
+
+    // Cambiar título
+    const titulo = card.querySelector("h6");
+    titulo.textContent = `Especialidad ${newIndex + 1}`;
+
+    // Cambiar select
+    card.querySelector(".select-especialidad").dataset.index = newIndex;
+
+    // Cambiar textarea
+    card.querySelector(".descripcion-especialidad").dataset.index = newIndex;
+
+    // Cambiar contenedor de evidencias
+    const evidencias = card.querySelector(".evidencias-list");
+    evidencias.id = `evidencias-list-${newIndex}`;
+
+    // Botón eliminar
+    card.querySelector(".btn-eliminar-tarjeta").dataset.index = newIndex;
+  });
+
+  // Reordenar el estado interno eliminando elementos marcados como "eliminados"
+  especialidadesState = especialidadesState.filter(e => !e.eliminada);
+
+  // Volver a asignar índices correctos al state
+  especialidadesState = especialidadesState.map((e, i) => ({ ...e, index: i }));
+}
+

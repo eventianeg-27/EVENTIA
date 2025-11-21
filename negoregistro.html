@@ -33,8 +33,8 @@
             <i class="bi bi-geo-alt-fill"></i> Ver en Maps
           </button>
         </div>
-        <small id="mapLinkText" class="text-muted" style="display:none;"> <a href="#" target="_blank" id="mapLink">Ver
-            ubicación</a></small>
+        <small id="mapLinkText" class="text-muted" style="display:none;">
+          <a href="#" target="_blank" id="mapLink">Ver ubicación</a></small>
 
 
         <!-- Imagen de la fachada -->
@@ -94,7 +94,7 @@
 
         <div id="camposRedes" class="mb-3 mt-2"></div>
 
-        <!-- Imagen de perfil -->
+        <!-- Foto de perfil -->
         <hr class="my-4" />
         <h5 class="text-primary"><i class="fas fa-image me-2"></i>Foto de perfil</h5>
 
@@ -126,9 +126,23 @@
           </select>
         </div>
 
-        <!-- Descripción -->
-        <textarea class="form-control mb-3" id="descripcion" placeholder="Descripción breve del servicio"
-          required></textarea>
+        <!-- ---------- ESPECIALIDADES DINÁMICAS (máx 2) ---------- -->
+        <hr class="my-4" />
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="text-primary mb-0"><i class="fas fa-star me-2"></i>Especialidades</h5>
+          <button type="button" id="btnAgregarEspecialidad" class="btn btn-outline-primary btn-sm btn-add-especialidad">
+            <i class="fas fa-plus me-1"></i>Agregar especialidad
+          </button>
+        </div>
+        
+        <small class="small-muted">Máximo 2 especialidades. Por cada especialidad sube fotos o vídeos
+          específicos.</small>
+
+        <div id="especialidadesContainer" class="especialidades-grid mb-3">
+          <!-- tarjeta(s) se crean dinámicamente desde JS -->
+        </div>
+
+
 
 
         <!-- Sección: Disponibilidad -->
@@ -197,16 +211,6 @@
           <label for="montoInicial" class="form-label">Monto sugerido (MXN):</label>
           <input type="number" class="form-control" id="montoInicial" placeholder="Ej. 500" required />
         </div>
-        <!-- Evidencias -->
-        <hr class="my-4" />
-        <h5 class="text-primary mb-4"><i class="fas fa-folder-open me-2"></i>Suba fotos o vídeos de su
-          trabajo:</h5>
-        <div id="contenedorEvidencias">
-          <!-- Se agregará dinámicamente -->
-        </div>
-        <button type="button" class="btn btn-outline-primary mb-3" id="agregarEvidencia">
-          <i class="fas fa-plus-circle me-1"></i><span id="textoBotonEvidencia">Agregar fotos y/o vídeos</span>
-        </button>
 
 
         <!-- Botón -->
@@ -221,27 +225,27 @@
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  
-  
+
+
   <script>
-  // VALIDAR QUE EXISTA PLAN AL ENTRAR AL REGISTRO
-  document.addEventListener("DOMContentLoaded", () => {
-    const plan = localStorage.getItem("planSeleccionado");
+    // VALIDAR QUE EXISTA PLAN AL ENTRAR AL REGISTRO
+    document.addEventListener("DOMContentLoaded", () => {
+      const plan = localStorage.getItem("planSeleccionado");
 
-    // ❌ Si no hay plan, sacar al usuario a planes.html
-    if (!plan) {
-      alert("Debes elegir un plan antes de registrar un negocio.");
-      window.location.href = "planes.html";
-      return;
-    }
+      // ❌ Si no hay plan, sacar al usuario a planes.html
+      if (!plan) {
+        alert("Debes elegir un plan antes de registrar un negocio.");
+        window.location.href = "planes.html";
+        return;
+      }
 
-    // ✔️ Mostrar el plan seleccionado en pantalla
-    const planElemento = document.getElementById("planElegido");
-    if (planElemento) {
-      planElemento.textContent = "Plan elegido: " + plan;
-    }
-  });
-</script>
+      // ✔️ Mostrar el plan seleccionado en pantalla
+      const planElemento = document.getElementById("planElegido");
+      if (planElemento) {
+        planElemento.textContent = "Plan elegido: " + plan;
+      }
+    });
+  </script>
 
 
   <script type="module" src="negoregistro.js"></script>
