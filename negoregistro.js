@@ -502,9 +502,9 @@ document.getElementById("fotoFachada").addEventListener("change", async (event) 
 
 
 // Agregar evidencia multimedia
-document.getElementById("agregarEvidencia").addEventListener("click", () => {
-  if (archivosEvidencias.length >= 3) {
-    alert("Solo puedes agregar hasta 3 imágenes y/o vídeos.");
+/*document.getElementById("agregarEvidencia").addEventListener("click", () => {
+  if (archivosEvidencias.length >= 4) {
+    alert("Solo puedes agregar hasta 4 imágenes y/o vídeos.");
     return;
   }
 
@@ -517,8 +517,8 @@ document.getElementById("agregarEvidencia").addEventListener("click", () => {
     const file = event.target.files[0];
     if (!file) return;
 
-    if (archivosEvidencias.length >= 3) {
-      alert("Límite de 3 evidencias alcanzado.");
+    if (archivosEvidencias.length >= 4) {
+      alert("Límite de 4 evidencias alcanzado.");
       return;
     }
 
@@ -552,7 +552,10 @@ document.getElementById("agregarEvidencia").addEventListener("click", () => {
   document.body.appendChild(input);
   input.click();
   document.body.removeChild(input);
-});
+});*/
+
+
+
 
 // Mostrar campo de usuario de red social al marcar checkbox
 window.mostrarCampoRed = function (checkbox) {

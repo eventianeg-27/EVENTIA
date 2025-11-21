@@ -248,18 +248,32 @@
   </script>
 
 
-  <script type="module" src="negoregistro.js"></script>
+
 
   <!-- Script para mostrar el campo de red social -->
-  <script>
-    function mostrarCampoRed(input) {
-      const campo = document.getElementById('usuarioRed');
-      campo.style.display = 'block';
-      campo.placeholder = `Nombre en ${input.value}`;
+<script>
+  function mostrarCampoRed(input) {
+    const contenedor = document.getElementById('camposRedes');
+
+    // Si se desmarca, borrar el campo
+    if (!input.checked) {
+      const campoAEliminar = document.getElementById("campo_" + input.id);
+      if (campoAEliminar) campoAEliminar.remove();
+      return;
     }
-  </script>
 
-
+    // Crear campo si no existe
+    if (!document.getElementById("campo_" + input.id)) {
+      contenedor.innerHTML += `
+        <div id="campo_${input.id}" class="mt-2">
+          <label class="form-label">${input.value}</label>
+          <input type="text" id="link_${input.id}" class="form-control" placeholder="Ingresa tu enlace de ${input.value}">
+        </div>
+      `;
+    }
+  }
+</script>
+  <script type="module" src="negoregistro.js"></script>
 </body>
 
 </html>
