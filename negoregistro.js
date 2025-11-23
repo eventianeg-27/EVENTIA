@@ -76,20 +76,29 @@ document.addEventListener("DOMContentLoaded", () => {
   agregarTarjetaEspecialidad();
 });
 
-// función para crear una tarjeta
-function agregarTarjetaEspecialidad() {
-  if (especialidadesState.length >= MAX_ESPECIALIDADES) {
+function agregarTarjetaEspecialidad(fromRebuild = false, data = null) {
+  if (!fromRebuild && especialidadesState.length >= MAX_ESPECIALIDADES) {
     alert(`Solo puedes agregar hasta ${MAX_ESPECIALIDADES} especialidades.`);
     return;
   }
 
   const index = especialidadesState.length;
-  // estado inicial
-  especialidadesState.push({
-    nombre: "",
-    descripcion: "",
-    archivos: [] // Files locales; se subirán al enviar
-  });
+
+  // Si es reconstrucción, cargar datos previos
+  if (fromRebuild && data) {
+    especialidadesState.push({
+      nombre: data.nombre || "",
+      descripcion: data.descripcion || "",
+      archivos: data.archivos || []
+    });
+  } else {
+    // Estado inicial normal
+    especialidadesState.push({
+      nombre: "",
+      descripcion: "",
+      archivos: []
+    });
+  }
 
   const card = document.createElement("div");
   card.className = "card-especialidad";
@@ -128,11 +137,19 @@ function agregarTarjetaEspecialidad() {
 
   especialidadesContainer.appendChild(card);
 
+  
+
   // referencias a los botones / inputs
   const btnEvid = card.querySelector(".btn-evidencia");
   const select = card.querySelector(".select-especialidad");
   const textarea = card.querySelector(".descripcion-especialidad");
   const btnEliminar = card.querySelector(".btn-eliminar-tarjeta");
+
+  // Restaurar datos cargados al reconstruir
+  if (fromRebuild && data) {
+    select.value = data.nombre || "";
+    textarea.value = data.descripcion || "";
+  }
 
   // crear input file invisible por tarjeta
   const inputFile = document.createElement("input");
@@ -230,26 +247,26 @@ function renderEvidenciasTarjeta(index) {
   });
 }
 
-// eliminar tarjeta por index y reindexar
 function eliminarTarjeta(index) {
-  // Evitar eliminar si solo hay 1 tarjeta
   if (especialidadesState.length <= 1) {
     alert("Debe existir al menos una especialidad.");
     return;
   }
 
-  // Solo ocultar la tarjeta del DOM
-  const card = especialidadesContainer.querySelector(`[data-index="${index}"]`);
-  if (card) {
-    card.style.display = "none";  // Solo ocultarla
-    card.classList.add("tarjeta-eliminada");
-  }
+  // 1. Guardar copia de los datos restantes
+  const temp = especialidadesState.filter((_, i) => i !== index);
 
-  // Marcar internamente como eliminada (pero no borrar su info)
-  especialidadesState[index].eliminada = true;
+  // 2. Vaciar el contenedor visual y el estado
+  especialidadesContainer.innerHTML = "";
+  especialidadesState = [];
+
+  // 3. Recrear las tarjetas PASANDO LOS DATOS
+  temp.forEach(data => agregarTarjetaEspecialidad(true, data));
 
   actualizarBotonAgregar();
 }
+
+
 
 
 // actualizar estado del botón agregar
@@ -332,7 +349,7 @@ document.getElementById("btnRegistro").addEventListener("click", async () => {
     }
   }
 
-  // ✅ Subir imagen de fachada si se seleccionó
+  // Subir imagen de fachada si se seleccionó
   if (archivoImagenFachada) {
     try {
       imagenFachadaUrl = await subirImagenACloudinary(archivoImagenFachada, proveedorId);
