@@ -3,7 +3,7 @@ import {
   getFirestore, doc, setDoc
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-// ✅ Configuración de Firebase (del primer código)
+//  Configuración de Firebase (del primer código)
 const firebaseConfig = {
   apiKey: "AIzaSyBhX59jBh2tUkEnEGcb9sFVyW2zJe9NB_w",
   authDomain: "eventia-9ead3.firebaseapp.com",
@@ -16,7 +16,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
 
 // Mostrar el plan elegido
 document.addEventListener("DOMContentLoaded", () => {
@@ -59,8 +58,6 @@ async function subirImagenACloudinary(file, proveedorId) {
   const data = await response.json();
   return data.secure_url;
 }
-
-
 
 
 // -----------------------
@@ -137,7 +134,7 @@ function agregarTarjetaEspecialidad(fromRebuild = false, data = null) {
 
   especialidadesContainer.appendChild(card);
 
-  
+
 
   // referencias a los botones / inputs
   const btnEvid = card.querySelector(".btn-evidencia");
@@ -267,8 +264,6 @@ function eliminarTarjeta(index) {
 }
 
 
-
-
 // actualizar estado del botón agregar
 function actualizarBotonAgregar() {
   if (especialidadesState.length >= MAX_ESPECIALIDADES) {
@@ -298,7 +293,7 @@ let archivoImagenPerfil = null;
 const archivosEvidencias = [];
 
 
-// 🔗 Variable global para guardar el link de Google Maps
+// Variable global para guardar el link de Google Maps
 let ubicacionLink = "";
 
 // Cuando el usuario haga clic en "Ver en Maps"
@@ -372,11 +367,50 @@ document.getElementById("btnRegistro").addEventListener("click", async () => {
     }
   }
 
+
+  // Subir evidencias
+evidenciasUrls.length = 0;
+for (const file of archivosEvidencias) {
+  try {
+    const url = await subirImagenACloudinary(file, proveedorId);
+    evidenciasUrls.push(url);
+  } catch (error) {
+    console.error("Error al subir evidencia:", error);
+    return alert("Error al subir una de las evidencias.");
+  }
+}
+
+// ⭐⭐⭐ SUBIR ARCHIVOS DE CADA ESPECIALIDAD ⭐⭐⭐
+for (let i = 0; i < especialidadesState.length; i++) {
+  const esp = especialidadesState[i];
+
+  const urls = [];
+
+  for (const file of esp.archivos) {
+    try {
+      const url = await subirImagenACloudinary(file, proveedorId);
+      urls.push(url);
+    } catch (error) {
+      console.error("Error al subir archivo de especialidad:", error);
+      alert("Error al subir archivos de una especialidad.");
+      return;
+    }
+  }
+
+  // Reemplazamos los File objects con URLs
+  esp.archivos = urls;
+}
+
+
   const negocio = document.getElementById("negocio").value.trim();
   const telefono = document.getElementById("telefono").value.trim();
   const ubicacionTexto = document.getElementById("ubicacion").value.trim();
-  const especialidad = document.getElementById("especialidad").value;
-  const descripcion = document.getElementById("descripcion").value.trim();
+  // Obtener especialidades desde las tarjetas dinámicas
+  const especialidadesFinal = especialidadesState.map(item => ({
+    nombre: item.nombre || "",
+    descripcion: item.descripcion || "",
+    galeria: item.archivos || []
+  }));
 
   const horaApertura = document.getElementById("horaApertura").value;
   const horaCierre = document.getElementById("horaCierre").value;
@@ -403,7 +437,11 @@ document.getElementById("btnRegistro").addEventListener("click", async () => {
   }
 
   const horario = `${horaApertura} - ${horaCierre}`;
-  const montoInicial = parseFloat(document.getElementById("montoInicial").value);
+  // Precios
+  const precioMin = parseFloat(document.getElementById("precioMin").value);
+  const precioMax = parseFloat(document.getElementById("precioMax").value);
+  const notaVariacion = document.getElementById("notaPrecio").value;
+
 
   const redesSociales = [];
   const usuariosRedes = {};
@@ -424,18 +462,21 @@ document.getElementById("btnRegistro").addEventListener("click", async () => {
     telefono,
     ubicacion: ubicacionTexto,
     ubicacionLink, // Guardar el enlace a Google Maps
-    especialidad,
-    descripcion,
+    especialidades: especialidadesFinal,
+    //especialidades: especialidadesState,
     diasAbierto: diasSeleccionados,
     horaApertura: horaApertura,
     horaCierre: horaCierre,
-    montoInicial,
+    precios: {
+      precioMin: precioMin,
+      precioMax: precioMax,
+      notaVariacion: notaVariacion || ""
+    },
     referenciaUbicacion,
     urlImagen: imagenPerfilUrl,
     urlFachada: imagenFachadaUrl, // Guardar URL de la fachada
     redesSociales,
     usuariosRedes,
-    evidencias: evidenciasUrls,
     timestamp: new Date(),  // Marca temporal de registro
     validado: false         // Campo para moderación
   };
@@ -502,7 +543,7 @@ document.getElementById("fotoPerfil").addEventListener("change", async (event) =
   }
 });
 
-// ✅ Vista previa y subida de imagen de la fachada
+// Vista previa y subida de imagen de la fachada
 document.getElementById("fotoFachada").addEventListener("change", async (event) => {
   try {
     archivoImagenFachada = event.target.files[0];
@@ -516,62 +557,6 @@ document.getElementById("fotoFachada").addEventListener("change", async (event) 
     alert("No se pudo mostrar la imagen de la fachada.");
   }
 });
-
-
-// Agregar evidencia multimedia
-/*document.getElementById("agregarEvidencia").addEventListener("click", () => {
-  if (archivosEvidencias.length >= 4) {
-    alert("Solo puedes agregar hasta 4 imágenes y/o vídeos.");
-    return;
-  }
-
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*,video/*";
-  input.style.display = "none";
-
-  input.addEventListener("change", (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    if (archivosEvidencias.length >= 4) {
-      alert("Límite de 4 evidencias alcanzado.");
-      return;
-    }
-
-    archivosEvidencias.push(file);
-
-    const wrapper = document.createElement("div");
-    wrapper.className = "evidencia-wrapper me-2 mb-2";
-
-    const elemento = document.createElement(file.type.startsWith("image/") ? "img" : "video");
-    elemento.src = URL.createObjectURL(file);
-    elemento.className = "evidencia-item";
-
-    if (file.type.startsWith("video/")) elemento.controls = true;
-
-    const eliminarBtn = document.createElement("button");
-    eliminarBtn.textContent = "✕";
-    eliminarBtn.title = "Eliminar evidencia";
-    eliminarBtn.className = "btn btn-sm btn-danger";
-
-    eliminarBtn.addEventListener("click", () => {
-      const index = archivosEvidencias.indexOf(file);
-      if (index !== -1) archivosEvidencias.splice(index, 1);
-      wrapper.remove();
-    });
-
-    wrapper.appendChild(elemento);
-    wrapper.appendChild(eliminarBtn);
-    document.getElementById("contenedorEvidencias").appendChild(wrapper);
-  });
-
-  document.body.appendChild(input);
-  input.click();
-  document.body.removeChild(input);
-});*/
-
-
 
 
 // Mostrar campo de usuario de red social al marcar checkbox

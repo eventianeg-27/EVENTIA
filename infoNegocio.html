@@ -27,17 +27,6 @@
       .then(html => {
         document.getElementById("navbar-container").innerHTML = html;
 
-        // --- Botón "Reservar" solo si estamos en infoNegocio.html ---
-        if (window.location.pathname.includes("infoNegocio.html")) {
-          const extraButtons = document.getElementById("extra-buttons");
-          if (extraButtons) {
-            const btnReservar = document.createElement("button");
-            btnReservar.className = "btn btn-success ms-2 btn-reservar";
-            btnReservar.textContent = "Reservar";
-            btnReservar.onclick = () => irAReservar();
-            extraButtons.appendChild(btnReservar);
-          }
-        }
 
         // logo redirige al inicio
         const logo = document.querySelector(".logo-navbar");
