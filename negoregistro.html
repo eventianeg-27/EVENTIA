@@ -111,21 +111,6 @@
         </div>
 
 
-
-        <!-- Especialidad -->
-        <hr class="my-4" />
-        <h5 class="text-primary"><i class="fas fa-star me-2"></i>Escoge la especialidad a ofertar</h5>
-        <div class="mb-3">
-          <select class="form-select" id="especialidad" required>
-            <option value="">Seleccione una</option>
-            <option>Fotografía y Video</option>
-            <option>Decoración y Ambientación</option>
-            <option>Renta de Mobiliario</option>
-            <option>Música y Entretenimiento</option>
-            <option>Banquete y Bebidas</option>
-          </select>
-        </div>
-
         <!-- ---------- ESPECIALIDADES DINÁMICAS (máx 2) ---------- -->
         <hr class="my-4" />
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -134,7 +119,7 @@
             <i class="fas fa-plus me-1"></i>Agregar especialidad
           </button>
         </div>
-        
+
         <small class="small-muted">Máximo 2 especialidades. Por cada especialidad sube fotos o vídeos
           específicos.</small>
 
@@ -208,8 +193,23 @@
         </h5>
 
         <div class="mb-3">
-          <label for="montoInicial" class="form-label">Monto sugerido (MXN):</label>
-          <input type="number" class="form-control" id="montoInicial" placeholder="Ej. 500" required />
+          <label class="form-label">Rango de precios (MXN):</label>
+
+          <div class="row g-2">
+            <div class="col-6">
+              <input type="number" class="form-control" id="precioMin" placeholder="Mínimo ej. 500" required>
+            </div>
+            <div class="col-6">
+              <input type="number" class="form-control" id="precioMax" placeholder="Máximo ej. 1500" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="notaPrecio" class="form-label">Agregue una nota de su variación de precios:</label>
+          <textarea class="form-control" id="notaPrecio" rows="2" maxlength="120"
+            placeholder="Ej. El costo puede variar según el tipo de paquete o combinación elegida."></textarea>
+          <small class="text-muted d-block mt-1">Máximo 120 caracteres</small>
         </div>
 
 
@@ -248,18 +248,32 @@
   </script>
 
 
-  <script type="module" src="negoregistro.js"></script>
+
 
   <!-- Script para mostrar el campo de red social -->
   <script>
     function mostrarCampoRed(input) {
-      const campo = document.getElementById('usuarioRed');
-      campo.style.display = 'block';
-      campo.placeholder = `Nombre en ${input.value}`;
+      const contenedor = document.getElementById('camposRedes');
+
+      // Si se desmarca, borrar el campo
+      if (!input.checked) {
+        const campoAEliminar = document.getElementById("campo_" + input.id);
+        if (campoAEliminar) campoAEliminar.remove();
+        return;
+      }
+
+      // Crear campo si no existe
+      if (!document.getElementById("campo_" + input.id)) {
+        contenedor.innerHTML += `
+        <div id="campo_${input.id}" class="mt-2">
+          <label class="form-label">${input.value}</label>
+          <input type="text" id="link_${input.id}" class="form-control" placeholder="Ingresa tu enlace de ${input.value}">
+        </div>
+      `;
+      }
     }
   </script>
-
-
+  <script type="module" src="negoregistro.js"></script>
 </body>
 
 </html>

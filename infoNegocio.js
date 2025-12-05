@@ -40,16 +40,30 @@ if (!negocioId || !proveedorId) {
         }).join("")
         : "";
 
-      div.innerHTML = `
-        <div class="d-flex align-items-center mb-4">
-          <img src="${datos.urlImagen}" alt="Foto de perfil" class="rounded-circle me-3" style="width: 100px; height: 100px; object-fit: cover;" />
+div.innerHTML = `
+      <div style="position: relative;">
+        
+        <!-- BOTÓN RESERVAR (ESQUINA SUPERIOR DERECHA) -->
+        <button 
+          class="btn btn-success btn-sm" 
+          onclick="irAReservar()" 
+          style="position: absolute; top: -10px; right: -10px; z-index: 10; border-radius: 8px;">
+          Reservar
+        </button>
+
+        <div class="d-flex align-items-center mb-4 mt-3">
+          <img src="${datos.urlImagen}" alt="Foto de perfil" 
+            class="rounded-circle me-3" 
+            style="width: 100px; height: 100px; object-fit: cover;" />
           <h4 class="mb-0">${datos.negocio}</h4>
         </div>
+
         <p><strong>Teléfono:</strong> ${datos.telefono}</p>
+
         <p><strong>Ubicación:</strong> 
           ${datos.ubicacionLink
-          ? `<a href="${datos.ubicacionLink}" target="_blank">${datos.ubicacion}</a>`
-          : (datos.ubicacion || 'No disponible')}
+            ? `<a href="${datos.ubicacionLink}" target="_blank">${datos.ubicacion}</a>`
+            : (datos.ubicacion || 'No disponible')}
         </p>
 
         ${datos.referenciaUbicacion
@@ -58,21 +72,25 @@ if (!negocioId || !proveedorId) {
 
         ${datos.urlFachada
           ? `<div class="mt-3 text-center">
-             <h5 class="text-primary mb-2"><i class="bi bi-shop me-2"></i>Fachada del negocio</h5>
-             <img src="${datos.urlFachada}" 
+              <h5 class="text-primary mb-2"><i class="bi bi-shop me-2"></i>Fachada del negocio</h5>
+              <img src="${datos.urlFachada}" 
                   alt="Fachada del negocio" 
                   class="img-fluid rounded shadow-sm" 
                   style="max-width: 400px; border-radius: 10px; margin-bottom: 30px;"/>
-        </div>`
-     : ''}
-    
+            </div>`
+          : ''}
+
         <p><strong>Especialidad:</strong> ${datos.especialidad}</p>
         <p><strong>Descripción:</strong> ${datos.descripcion}</p>
         <p><strong>Horario:</strong> ${datos.horario}</p>
         <h5>Redes Sociales:</h5>
         <ul>${redesHTML}</ul>
         <p><strong>Monto Inicial:</strong> $${datos.montoInicial}</p>
-      `;
+
+      </div>
+`;
+
+
 
       // Mostrar galería
       if (galeriaDiv) {
@@ -147,7 +165,7 @@ if (btnRegresar) {
 // ================================
 // 🔹 CONTROL DEL LOGO SEGÚN SESIÓN
 // ================================
-import { getAuth, onAuthStateChanged } 
+import { getAuth, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
 document.addEventListener("DOMContentLoaded", () => {
