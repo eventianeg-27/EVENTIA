@@ -75,9 +75,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     const negociosRef = collection(db, "usuarios", usuarioLogueado.correo, "negocios");
     const negociosSnap = await getDocs(negociosRef);
 
-    if (!negociosSnap.empty && botonRegistro) {
-      botonRegistro.textContent = "Agregar más negocios";
+    if (usuarioLogueado.esProveedor) {
+      if (modoProveedorTexto) modoProveedorTexto.style.display = "block";
+      if (btnMisNegocios) btnMisNegocios.style.display = "block";
+
+      const negociosRef = collection(db, "usuarios", usuarioLogueado.correo, "negocios");
+      const negociosSnap = await getDocs(negociosRef);
+
+      const cantidadNegocios = negociosSnap.size;
+      const plan = (localStorage.getItem("planTexto") || "Básico").toLowerCase();
+
+      let limite = 1;
+
+      if (plan === "plus") limite = 2;
+      if (plan === "premium") limite = 3;
+
+      // 🔥 Mostrar botón SOLO si aún puede agregar
+      if (botonRegistro) {
+        if (cantidadNegocios < limite) {
+          botonRegistro.style.display = "block";
+          botonRegistro.textContent = cantidadNegocios === 0 ? "Registrar negocio" : "Agregar más negocios";
+        } else {
+          botonRegistro.style.display = "none";
+        }
+      }
     }
+
+
   }
 
   localStorage.setItem("proveedorId", usuarioLogueado.correo);
@@ -121,32 +145,64 @@ if (cerrarSesionBtn) {
 }
 
 // ==========================
-// VALIDAR CANTIDAD DE NEGOCIOS (REGLA NUEVA)
+// VALIDAR PLAN Y CANTIDAD DE NEGOCIOS
 // ==========================
 const btnRegistroNegocio = document.getElementById("btnRegistroNegocio");
+
 if (btnRegistroNegocio) {
   btnRegistroNegocio.addEventListener("click", async () => {
+
     const usuarioLogueado = JSON.parse(localStorage.getItem("usuarioLogueado") || "{}");
+    const plan = (localStorage.getItem("planTexto") || "Básico").toLowerCase();
 
     if (!usuarioLogueado.correo) {
       alert("Debes iniciar sesión para registrar un negocio.");
       return;
     }
 
+    // Leer negocios del usuario
     const negociosRef = collection(db, "usuarios", usuarioLogueado.correo, "negocios");
     const negociosSnap = await getDocs(negociosRef);
     const cantidad = negociosSnap.size;
 
-    // NUEVA LÓGICA QUE PEDISTE
-    if (cantidad === 0) {
-      window.location.href = "planes.html";
-    } else if (cantidad === 1) {
-      window.location.href = "NegoRegistro.html";
-    } else if (cantidad >= 2) {
-      alert("Solo puedes registrar hasta 2 negocios.");
+    // 🔥 PLAN BÁSICO → SOLO 1 NEGOCIO
+    if (plan === "Básico") {
+
+      if (cantidad === 0) {
+        // primer negocio
+        window.location.href = "negoregistro.html";
+      } else {
+        alert("Tu plan Básico solo permite registrar 1 negocio. Mejora tu plan para agregar más.");
+        window.location.href = "planes.html";
+      }
+
+      return;
+    }
+
+    // 🔥 PLAN PLUS → hasta 2 negocios
+    if (plan === "plus") {
+      if (cantidad < 2) {
+        window.location.href = "negoregistro.html";
+      } else {
+        alert("Tu plan Premium permite máximo 2 negocios. Mejora tu plan para agregar más.");
+        window.location.href = "planes.html";
+      }
+      return;
+    }
+
+    // 🔥 PLAN PREMIUM
+    if (plan === "premium") {
+      if (cantidad < 2) {
+        window.location.href = "negoregistro.html";
+      } else {
+        alert("Tu plan Premium permite máximo 3 negocios.");
+        window.location.href = "planes.html";
+      }
+      return;
     }
   });
 }
+
 
 // ==========================
 // Buscar categoría desde dropdown
@@ -280,57 +336,61 @@ function escucharCambiosReservasCliente(clienteCorreo) {
   if (campana) campana.style.display = "none";
   if (contador) contador.style.display = "none";
 
-  onSnapshot(collection(db, "usuarios"), usuariosSnap => {
-    const proveedores = usuariosSnap.docs.filter(d => d.data().esProveedor === true);
+  try {
+    onSnapshot(collection(db, "usuarios"), usuariosSnap => {
+      const proveedores = usuariosSnap.docs.filter(d => d.data().esProveedor === true);
 
-    proveedores.forEach(proveedorDoc => {
-      const proveedorId = proveedorDoc.id;
+      proveedores.forEach(proveedorDoc => {
+        const proveedorId = proveedorDoc.id;
 
-      const reservasRecibidasRef = collection(db, "usuarios", proveedorId, "reservas_recibidas");
-      getDocs(reservasRecibidasRef).then(reservasSnap => {
-        reservasSnap.forEach(reservaDoc => {
-          const negocioId = reservaDoc.id;
+        const reservasRecibidasRef = collection(db, "usuarios", proveedorId, "reservas_recibidas");
 
-          const reservasRef = collection(
-            db,
-            "usuarios",
-            proveedorId,
-            "reservas_recibidas",
-            negocioId,
-            "clientes",
-            clienteCorreo,
-            "reservas"
-          );
+        getDocs(reservasRecibidasRef).then(reservasSnap => {
+          reservasSnap.forEach(reservaDoc => {
+            const negocioId = reservaDoc.id;
 
-          onSnapshot(reservasRef, snapshot => {
-            const nuevas = [];
+            const reservasRef = collection(
+              db,
+              "usuarios",
+              proveedorId,
+              "reservas_recibidas",
+              negocioId,
+              "clientes",
+              clienteCorreo,
+              "reservas"
+            );
 
-            snapshot.forEach(rDoc => {
-              const data = rDoc.data();
-              if (data.estado !== "pendiente" && !data.vistoPorCliente) {
-                nuevas.push(rDoc.id);
+            onSnapshot(reservasRef, snapshot => {
+              const nuevas = [];
+
+              snapshot.forEach(rDoc => {
+                const data = rDoc.data();
+                if (data.estado !== "pendiente" && !data.vistoPorCliente) {
+                  nuevas.push(rDoc.id);
+                }
+              });
+
+              if (nuevas.length > 0) {
+                if (campana) campana.style.display = "inline-block";
+                if (contador) {
+                  contador.style.display = "inline-block";
+                  contador.textContent = nuevas.length;
+                }
+              } else {
+                if (campana) campana.style.display = "none";
+                if (contador) contador.style.display = "none";
               }
+
+              localStorage.setItem("reservasVistas", JSON.stringify(nuevas));
             });
-
-            if (nuevas.length > 0) {
-              if (campana) campana.style.display = "inline-block";
-              if (contador) {
-                contador.style.display = "inline-block";
-                contador.textContent = nuevas.length;
-              }
-            } else {
-              if (campana) campana.style.display = "none";
-              if (contador) contador.style.display = "none";
-            }
-
-            localStorage.setItem("reservasVistas", JSON.stringify(nuevas));
           });
         });
       });
     });
-  }).catch(err => {
+  } catch (err) {
     console.error("Error al escuchar cambios de reservas:", err);
-  });
+  }
+
 }
 
 document.addEventListener("DOMContentLoaded", () => {

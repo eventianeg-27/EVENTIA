@@ -58,7 +58,8 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import {
-      getFirestore, doc, updateDoc, setDoc
+      getFirestore, doc, updateDoc, setDoc, collection, getDocs
+
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
     // 🔥 CONFIG FIREBASE
@@ -79,50 +80,156 @@
     // ==========================================================
     async function elegirPlan(plan) {
 
-      // Guardamos en localStorage para usarlo en principalpag.html
+      const usuarioLogueado = JSON.parse(localStorage.getItem("usuarioLogueado") || "{}");
+
+      if (!usuarioLogueado.correo) {
+        alert("Debes iniciar sesión para elegir un plan.");
+        return;
+      }
+
+      const userRef = doc(db, "usuarios", usuarioLogueado.correo);
+      const negociosRef = collection(db, "usuarios", usuarioLogueado.correo, "negocios");
+      const negociosSnap = await getDocs(negociosRef);
+      const cantidadNegocios = negociosSnap.size;
+
+      // ===============================
+      // 🔥 LÍMITES POR PLAN
+      // ===============================
+      let limite = 1;
+      if (plan === "plus") limite = 2;
+      if (plan === "premium") limite = 3;
+
+      // ===============================
+      // 📌 OBTENER PLAN ACTUAL REAL
+      // ===============================
+      let planActual = localStorage.getItem("planSeleccionado") || null;
+
+      // Si no hay plan guardado aún, permitir elegir cualquier plan
+      if (!planActual) planActual = "ninguno";
+
+      const nivel = { ninguno: 0, basico: 1, plus: 2, premium: 3 };
+
+      // ===============================
+      // 🚫 NO PERMITIR BAJAR DE PLAN (solo si ya tenía un plan)
+      // ===============================
+      if (planActual !== "ninguno" && nivel[plan] < nivel[planActual]) {
+        alert(`No puedes bajar de nivel.\nTu plan actual es: ${planActual.toUpperCase()}`);
+        return;
+      }
+
+      // ===============================
+      // 🚫 PLAN BÁSICO NO PERMITIDO SI YA TIENE 1 NEGOCIO O MÁS
+      // ===============================
+      if (plan === "basico" && cantidadNegocios >= 1) {
+        alert("Ya tienes 1 negocio registrado.\nEl plan Básico ya no está disponible.\nPor favor selecciona Plus o Premium.");
+        return;
+      }
+
+      // ===============================
+      // 🚫 NO PERMITIR ELEGIR UN PLAN QUE TENGA MENOR CAPACIDAD
+      // ===============================
+      if (cantidadNegocios > limite) {
+        alert(
+          `No puedes elegir este plan.\n` +
+          `Este plan permite ${limite} negocios, ` +
+          `pero ya tienes ${cantidadNegocios}.`
+        );
+        return;
+      }
+
+      // ===============================
+      // 🔥 GUARDAR PLAN EN LOCAL Y FIRESTORE
+      // ===============================
       localStorage.setItem("planSeleccionado", plan);
 
-
-      // Guardar nombre para mostrarlo luego
       if (plan === "basico") localStorage.setItem("planTexto", "Básico");
       if (plan === "plus") localStorage.setItem("planTexto", "Plus");
       if (plan === "premium") localStorage.setItem("planTexto", "Premium");
 
-      // Si además quieres guardarlo en Firestore,
-      // usamos el correo del usuario guardado en localStorage
-      const usuarioLogueado = JSON.parse(localStorage.getItem("usuarioLogueado") || "{}");
-
-      if (usuarioLogueado.correo) {
-        const userRef = doc(db, "usuarios", usuarioLogueado.correo);
-
-        try {
-          await updateDoc(userRef, { plan: plan })
-            .catch(async () => {
-              await setDoc(userRef, { plan: plan });
-            });
-        } catch (e) {
-          console.warn("No se pudo guardar el plan en Firestore:", e);
-        }
+      try {
+        await updateDoc(userRef, { plan: plan });
+      } catch {
+        await setDoc(userRef, { plan: plan });
       }
 
-      // Redirecciones por plan elegido
-      if (plan === "basico") {
-        window.location.href = "negoregistro.html";
-        return;
-      }
-
-      if (plan === "plus") {
-        alert("Plan Plus próximamente.");
-        return;
-      }
-
-      if (plan === "premium") {
-        alert("Plan Premium próximamente.");
-        return;
-      }
+      // ===============================
+      // 🎯 REDIRECCIÓN
+      // ===============================
+      window.location.href = "negoregistro.html";
     }
 
     window.elegirPlan = elegirPlan;
+
+    // ==========================================================
+    // DESACTIVAR BOTONES SEGÚN EL PLAN ACTUAL Y NEGOCIOS
+    // ==========================================================
+    // ==========================================================
+    // DESACTIVAR BOTONES SEGÚN EL PLAN ACTUAL Y NEGOCIOS
+    // ==========================================================
+    async function actualizarUIPlanes() {
+      const usuarioLogueado = JSON.parse(localStorage.getItem("usuarioLogueado") || "{}");
+
+      if (!usuarioLogueado.correo) return;
+
+      const negociosRef = collection(db, "usuarios", usuarioLogueado.correo, "negocios");
+      const negociosSnap = await getDocs(negociosRef);
+      const cantidadNegocios = negociosSnap.size;
+
+      const planActual = localStorage.getItem("planSeleccionado") || "ninguno";
+
+      const limites = { basico: 1, plus: 2, premium: 3 };
+
+      // 🔥 Ciclo para los 3 planes
+      ["basico", "plus", "premium"].forEach(plan => {
+        const card = document.querySelector(`.${plan} .btn-seleccionar`);
+        const planBox = document.querySelector(`.${plan}`);
+
+        if (!card || !planBox) return;
+
+        // Restaurar estilos por si acaso
+        card.style.pointerEvents = "auto";
+        card.style.background = "";
+        planBox.style.opacity = "1";
+
+        // ==========================
+        // SI ES EL PLAN ACTUAL → DESACTIVAR Y MARCAR
+        // ==========================
+        if (plan === planActual) {
+          card.textContent = "PLAN SELECCIONADO";
+          card.style.background = "#9e9e9e";
+          card.style.pointerEvents = "none";
+          planBox.style.opacity = "0.6";
+          return;
+        }
+
+        // ==========================
+        // SI EL PLAN NO ALCANZA PARA SUS NEGOCIOS → BLOQUEO VISUAL
+        // ==========================
+        if (cantidadNegocios > limites[plan]) {
+          card.textContent = "NO DISPONIBLE";
+          card.style.background = "#cfcfcf";
+          card.style.pointerEvents = "none";
+          planBox.style.opacity = "0.5";
+          return;
+        }
+
+        // ==========================
+        // SI ES PLAN BÁSICO Y YA TIENE UN NEGOCIO → BLOQUEAR
+        // ==========================
+        if (plan === "basico" && cantidadNegocios >= 1) {
+          card.textContent = "NO DISPONIBLE";
+          card.style.background = "#cfcfcf";
+          card.style.pointerEvents = "none";
+          planBox.style.opacity = "0.5";
+          return;
+        }
+      });
+    }
+
+    // Ejecutar UI al cargar la página
+    actualizarUIPlanes();
+    window.actualizarUIPlanes = actualizarUIPlanes;
+
   </script>
 
 </body>

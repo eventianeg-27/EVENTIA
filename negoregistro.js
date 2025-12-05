@@ -18,16 +18,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // Mostrar el plan elegido
-document.addEventListener("DOMContentLoaded", () => {
-  const planTexto = localStorage.getItem("planTexto");
-
-  if (planTexto) {
-    const planElemento = document.getElementById("planElegido");
-    if (planElemento) {
-      planElemento.textContent = `Plan elegido: ${planTexto}`;
-    }
+const planTexto = localStorage.getItem("planTexto");
+if (planTexto) {
+  const planElemento = document.getElementById("planElegido");
+  if (planElemento) {
+    planElemento.textContent = `Plan elegido: ${planTexto}`;
   }
-});
+}
 
 
 // Establecer proveedorId si no existe pero nombreUsuario sí
@@ -63,15 +60,44 @@ async function subirImagenACloudinary(file, proveedorId) {
 // -----------------------
 // Estado para especialidades
 // -----------------------
-const MAX_ESPECIALIDADES = 2;
+let MAX_ESPECIALIDADES = 2; // será ajustado según el plan
 let especialidadesState = []; // array de objetos {nombre, descripcion, archivos: [File,...]}
 const especialidadesContainer = document.getElementById("especialidadesContainer");
 const btnAgregarEspecialidad = document.getElementById("btnAgregarEspecialidad");
 
-// inicializar con 1 tarjeta
+
+
+// -------------------
+//  AJUSTAR LÍMITE SEGÚN EL PLAN
+// -------------------
+
 document.addEventListener("DOMContentLoaded", () => {
-  agregarTarjetaEspecialidad();
+    const plan = localStorage.getItem("planTexto");
+
+    if (plan === "Gratis") {
+        MAX_ESPECIALIDADES = 2;
+    } else if (plan === "Plus") {
+        MAX_ESPECIALIDADES = 5;
+    } else if (plan === "Premium") {
+        MAX_ESPECIALIDADES = 5;
+    }
+
+    actualizarBotonAgregar(); // ← importante
+
+    // iniciar con una tarjeta
+    agregarTarjetaEspecialidad();
+
+    // Cambiar texto visible del límite
+    const textoMax = document.getElementById("textoMaxEspecialidades");
+    if (textoMax) {
+        textoMax.textContent = `Máximo ${MAX_ESPECIALIDADES} especialidades.`;
+    }  
 });
+
+
+
+
+
 
 function agregarTarjetaEspecialidad(fromRebuild = false, data = null) {
   if (!fromRebuild && especialidadesState.length >= MAX_ESPECIALIDADES) {
@@ -526,22 +552,6 @@ document.getElementById("fotoPerfil").addEventListener("change", async (event) =
   }
 });
 
-
-// Vista previa y subida de imagen de perfil
-document.getElementById("fotoPerfil").addEventListener("change", async (event) => {
-  try {
-    archivoImagenPerfil = event.target.files[0];
-    if (!archivoImagenPerfil) return;
-
-    const preview = document.getElementById("previewImagen");
-    preview.src = URL.createObjectURL(archivoImagenPerfil);
-    preview.style.display = "block";
-
-  } catch (error) {
-    console.error("Error al subir imagen de perfil:", error);
-    alert("No se pudo subir la imagen de perfil.");
-  }
-});
 
 // Vista previa y subida de imagen de la fachada
 document.getElementById("fotoFachada").addEventListener("change", async (event) => {
