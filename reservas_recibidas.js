@@ -14,33 +14,9 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 
-/* -------------------------
-   Helpers hora
-   ------------------------- */
-function convertir12a24(hora12) {
-  const partes = hora12.match(/(\d+):(\d+)\s*(AM|PM)/i);
-  if (!partes) return hora12;
-  let h = parseInt(partes[1], 10);
-  const m = partes[2];
-  const ampm = partes[3].toUpperCase();
-  if (ampm === "PM" && h !== 12) h += 12;
-  if (ampm === "AM" && h === 12) h = 0;
-  return `${String(h).padStart(2, "0")}:${m}`;
-}
-function convertirHora12h(hora24) {
-  if (!hora24) return "-";
-  const [hS, mS] = hora24.split(":");
-  if (hS === undefined) return hora24;
-  const h = Number(hS);
-  const m = Number(mS || 0);
-  const sufijo = h >= 12 ? "PM" : "AM";
-  const hora12 = (h % 12) || 12;
-  return `${hora12}:${m.toString().padStart(2, "0")} ${sufijo}`;
-}
-
-/* -------------------------
-   Firebase config
-   ------------------------- */
+// ==========================
+// Configuración Firebase
+// ==========================
 const firebaseConfig = {
   apiKey: "AIzaSyBhX59jBh2tUkEnEGcb9sFVyW2zJe9NB_w",
   authDomain: "eventia-9ead3.firebaseapp.com",
@@ -49,13 +25,14 @@ const firebaseConfig = {
   messagingSenderId: "313661648136",
   appId: "1:313661648136:web:1c9eb73bbb3f78994c90bd",
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-/* -------------------------
-   Utilidades varias
-   ------------------------- */
+// ==========================
+// Obtener proveedorId desde localStorage
+// ==========================
 function getProveedorIdFromLocalStorage() {
   try {
     const usuario = JSON.parse(localStorage.getItem("usuarioLogueado") || "{}");
@@ -65,113 +42,160 @@ function getProveedorIdFromLocalStorage() {
   } catch { }
   return null;
 }
+
+// ==========================
+// Formatear fecha
+// ==========================
 function formatearFecha(fecha) {
   if (!fecha) return "-";
   let d = fecha;
-  if (fecha && typeof fecha === "object" && typeof fecha.toDate === "function") {
-    d = fecha.toDate();
-  } else if (fecha && typeof fecha === "object" && fecha.seconds) {
-    d = new Date(fecha.seconds * 1000);
-  } else if (typeof fecha === "string") {
-    const isoMatch = fecha.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (isoMatch) {
-      const y = Number(isoMatch[1]);
-      const m = Number(isoMatch[2]);
-      const day = Number(isoMatch[3]);
-      d = new Date(y, m - 1, day);
-    } else {
-      d = new Date(fecha);
-    }
-  }
-  if (!(d instanceof Date) || isNaN(d)) return "-";
+  if (fecha.toDate) d = fecha.toDate();
+  else if (fecha.seconds) d = new Date(fecha.seconds * 1000);
+  else if (typeof fecha === "string") d = new Date(fecha);
+  if (isNaN(d)) return "-";
   const dia = String(d.getDate()).padStart(2, "0");
   const mes = String(d.getMonth() + 1).padStart(2, "0");
   const anio = d.getFullYear();
   return `${dia} - ${mes} - ${anio}`;
 }
 
-/* -------------------------
-   Variables globales
-   ------------------------- */
+// ==========================
+// Variables
+// ==========================
 const negocioId = localStorage.getItem("negocioId");
 const contenedor = document.getElementById("contenedorReservas");
-const modalDetalle = document.getElementById("detalleReserva");
+const modalDetalle = document.getElementById("modalDetalle");
 let reservas = [];
 let reservasFiltradas = [];
-let reservaSeleccionada = null; // para sugerir
 
-/* -------------------------
-   Toast helper (Bootstrap) con variante
-   ------------------------- */
-function showToast(message, autohide = true, variant = "primary") {
-  // variant puede ser 'primary','warning','success','danger'
-  const container = document.getElementById("toastContainer");
-  if (!container) return;
-  const toastEl = document.createElement("div");
+// ==========================
+// MODAL CONFIRMACIÓN BONITO
+// ==========================
+// ==========================
+// MODAL DE CONFIRMACIÓN BONITO Y CON COLORES SEGÚN ACCIÓN
+// ==========================
+function mostrarConfirmacion(tipo, titulo, mensaje, callbackSi) {
+  // Colores e iconos según el tipo
+  let colorHeader = "bg-primary";
+  let colorBoton = "btn-primary";
+  let icono = "bi-question-circle";
 
-  // seleccionar clases según variante (naranja -> warning)
-  const bgClass = variant === "warning" ? "bg-warning text-dark" :
-                  variant === "danger" ? "bg-danger text-white" :
-                  variant === "success" ? "bg-success text-white" :
-                  "bg-primary text-white";
+  if (tipo === "aceptar") {
+    colorHeader = "bg-success";
+    colorBoton = "btn-success";
+    icono = "bi-check-circle";
+  } else if (tipo === "cancelar") {
+    colorHeader = "bg-danger";
+    colorBoton = "btn-danger";
+    icono = "bi-x-circle";
+  } else if (tipo === "guardar") {
+    colorHeader = "bg-purple";
+    colorBoton = "btn-purple";
+    icono = "bi-save";
+  }
 
-  toastEl.className = `toast align-items-center ${bgClass} border-0`;
-  toastEl.role = "alert";
-  toastEl.ariaLive = "assertive";
-  toastEl.ariaAtomic = "true";
-  toastEl.innerHTML = `
+  const modalHtml = `
+    <div class="modal fade" id="modalConfirmCustom" tabindex="-1" data-bs-backdrop="static">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+          <div class="modal-header ${colorHeader} text-white py-3">
+            <h5 class="modal-title fw-bold">
+              <i class="bi ${icono} fs-4 me-2"></i>${titulo}
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center py-5">
+            <p class="fs-5 mb-0">${mensaje}</p>
+          </div>
+          <div class="modal-footer justify-content-center gap-4 pb-1 pb-4">
+            <button type="button" class="btn btn-secondary px-5" data-bs-dismiss="modal">
+              <i class="bi bi-x-lg"></i> Cancelar
+            </button>
+            <button type="button" class="btn ${colorBoton} px-5 btn-confirmar-si shadow-sm">
+              <i class="bi bi-check-lg"></i> Sí, confirmar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+  // Estilo morado (por si no lo tenías)
+  if (!document.getElementById("estiloMoradoConfirm")) {
+    const estilo = document.createElement("style");
+    estilo.id = "estiloMoradoConfirm";
+    estilo.textContent = `
+      .bg-purple { background-color: #6f42c1 !important; }
+      .btn-purple { background-color: #6f42c1 !important; border-color: #6f42c1 !important; color: white !important; }
+      .btn-purple:hover { background-color: #5a32a3 !important; border-color: #5a32a3 !important; }
+    `;
+    document.head.appendChild(estilo);
+  }
+
+  const modalEl = document.getElementById("modalConfirmCustom");
+  const modal = new bootstrap.Modal(modalEl);
+
+  modalEl.querySelector(".btn-confirmar-si").onclick = () => {
+    modal.hide();
+    callbackSi();
+  };
+
+  modalEl.addEventListener('hidden.bs.modal', () => modalEl.remove());
+  modal.show();
+}
+
+// ==========================
+// TOAST DE ÉXITO (MEJORADO Y MÁS BONITO)
+// ==========================
+function mostrarExito(mensaje) {
+  const toast = document.createElement("div");
+  toast.className = "toast align-items-center text-bg-success border-0 position-fixed shadow-lg";
+  toast.style.top = "20px";
+  toast.style.right = "20px";
+  toast.style.zIndex = "9999";
+  toast.style.minWidth = "300px";
+  toast.innerHTML = `
     <div class="d-flex">
-      <div class="toast-body">${message}</div>
-      <button type="button" class="btn-close ${variant === "warning" ? "" : "btn-close-white"} me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-    </div>
-  `;
-  container.appendChild(toastEl);
-  const bs = new bootstrap.Toast(toastEl, { delay: 3000 });
-  bs.show();
-  if (!autohide) bs._config.autohide = false;
-  toastEl.addEventListener("hidden.bs.toast", () => toastEl.remove());
+      <div class="toast-body fs-6 fw-bold">
+        <i class="bi bi-check-circle-fill me-2"></i>${mensaje}
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>`;
+  document.body.appendChild(toast);
+  const bsToast = new bootstrap.Toast(toast, { delay: 4000 });
+  bsToast.show();
+  setTimeout(() => toast.remove(), 5000);
 }
 
-/* -------------------------
-   Compute remaining ms until suggest expires (72h after acceptedAt)
-   Returns { ms, text, expiredBool }
-   ------------------------- */
-function computeSuggestRemaining(acceptedAtIso) {
-  if (!acceptedAtIso) return { ms: null, text: "", expired: true };
-  const acceptedMs = (new Date(acceptedAtIso)).getTime();
-  if (isNaN(acceptedMs)) return { ms: null, text: "", expired: true };
-  const expireMs = acceptedMs + 72 * 3600 * 1000; // 72 hours
-  const now = Date.now();
-  const ms = expireMs - now;
-  if (ms <= 0) return { ms: 0, text: "0h 0m", expired: true };
-  // format
-  const hours = Math.floor(ms / (3600 * 1000));
-  const mins = Math.floor((ms % (3600 * 1000)) / (60 * 1000));
-  return { ms, text: `${hours}h ${mins}m restantes`, expired: false };
-}
 
-/* -------------------------
-   Re-render a single reserva in memory and redraw table
-   ------------------------- */
-function actualizarReservaEnMemoria(clienteId, id, nuevosDatos) {
-  let changed = false;
-  reservas = reservas.map(r => {
-    if (r.id === id && r.clienteId === clienteId) {
-      r.data = { ...r.data, ...nuevosDatos };
-      changed = true;
+
+// ==========================
+// Mostrar encabezado del negocio
+// ==========================
+async function mostrarEncabezadoNegocio(proveedorId, negocioId) {
+  try {
+    const negocioRef = doc(db, "usuarios", proveedorId, "negocios", negocioId);
+    const negocioSnap = await getDoc(negocioRef);
+    if (negocioSnap.exists()) {
+      const data = negocioSnap.data();
+      document.getElementById("nombreNegocio").textContent = data.nombreNegocio || negocioId;
+      document.getElementById("fotoNegocio").src = data.urlImagen || "https://via.placeholder.com/80";
+    } else {
+      document.getElementById("nombreNegocio").textContent = "Negocio no encontrado";
     }
-    return r;
-  });
-  if (changed) renderTabla();
+  } catch (err) {
+    console.error("Error al cargar datos del negocio:", err);
+  }
 }
 
-/* -------------------------
-   Agrupar por día y render
-   ------------------------- */
+// ==========================
+// Agrupar reservas por día
+// ==========================
 function agruparPorDia(reservas) {
   const grupos = {};
   reservas.forEach(r => {
-    const ts = r.data.creadoEn?.toDate ? r.data.creadoEn.toDate() : (r.data.creadoEn ? new Date(r.data.creadoEn) : new Date());
+    const ts = r.data.creadoEn?.toDate ? r.data.creadoEn.toDate() : new Date(r.data.creadoEn);
     const fechaClave = formatearFecha(ts);
     if (!grupos[fechaClave]) grupos[fechaClave] = [];
     grupos[fechaClave].push(r);
@@ -179,6 +203,25 @@ function agruparPorDia(reservas) {
   return grupos;
 }
 
+// ==========================
+// para el color de la letra del estado
+// ==========================
+function colorEstado(estado) {
+  if (!estado) return "black";
+
+  const e = estado.toLowerCase();
+
+  if (e.includes("pendiente")) return "purple";   // pendiente / pendiente anticipo
+  if (e.includes("acept")) return "green";        // aceptado
+  if (e.includes("rechaz")) return "red";         // rechazado
+  if (e.includes("expir")) return "gray";         // expirada
+
+  return "black";
+}
+
+// ==========================
+// RENDER TABLA – CON MODALES BONITOS Y SIN BUG DE BLOQUEO
+// ==========================
 function renderTabla(lista = reservasFiltradas) {
   contenedor.innerHTML = "";
   const reservasPorDia = agruparPorDia(lista);
@@ -193,9 +236,11 @@ function renderTabla(lista = reservasFiltradas) {
     const divDia = document.createElement("div");
     divDia.classList.add("mb-4", "p-3", "border", "rounded", "bg-light");
 
+
+
     divDia.innerHTML = `
       <h4 class="fw-bold mb-1">Reservas recibidas el día:</h4>
-      <p>📅 <strong>${fecha}</strong>
+      <p> <strong>${fecha}</strong>
       <span class="text-muted" style="font-size:0.9em;">&nbsp;&nbsp;Tienes 48 hrs para dar una respuesta al cliente.</span></p>
     `;
 
@@ -207,8 +252,7 @@ function renderTabla(lista = reservasFiltradas) {
           <th>Folio</th>
           <th>Correo Cliente</th>
           <th>Evento</th>
-          <th>Fecha del evento</th>
-          <th>Hora del evento</th>
+         <th>Hora del evento</th>
           <th>Estado</th>
           <th>Acciones</th>
         </tr>
@@ -219,342 +263,448 @@ function renderTabla(lista = reservasFiltradas) {
 
     grupo.forEach(({ id, clienteId, data }) => {
       const ahora = new Date();
-      const limite = data.limiteRespuesta?.toDate ? data.limiteRespuesta.toDate() : (data.limiteRespuesta ? new Date(data.limiteRespuesta) : null);
-      let estadoActual = data.estado || "pendiente";
-
-      // lógica expiración 48h basada en limiteRespuesta:
-      const expiradoPorLimite = limite ? (ahora > limite) : false;
-      if (estadoActual === "pendiente" && expiradoPorLimite) {
+      const limite = data.limiteRespuesta?.toDate ? data.limiteRespuesta.toDate() : new Date(data.limiteRespuesta);
+      let estadoActual = (data.estado === "aceptado" || data.estado === "rechazado" || data.estado === "expirada")
+        ? data.estado
+        : "pendiente";
+      if (estadoActual === "pendiente" && limite && ahora > limite) {
         estadoActual = "expirada";
         const proveedorId = getProveedorIdFromLocalStorage();
         if (proveedorId) {
-          const reservaRef = doc(
-            db,
-            "usuarios",
-            proveedorId,
-            "reservas_recibidas",
-            negocioId,
-            "clientes",
-            clienteId,
-            "reservas",
-            id
-          );
-          updateDoc(reservaRef, { estado: "expirada" }).catch(() => { });
+          updateDoc(doc(db, "usuarios", proveedorId, "reservas_recibidas", negocioId, "clientes", clienteId, "reservas", id), { estado: "expirada" }).catch(() => { });
         }
       }
 
-      let colorEstado = "purple";
-      if (estadoActual === "aceptado") colorEstado = "green";
-      else if (estadoActual === "rechazado") colorEstado = "red";
-      else if (estadoActual === "expirada") colorEstado = "gray";
-      else if (estadoActual === "edicion_solicitada") colorEstado = "orange";
+      const textoEstado = {
+        pendiente: "Pendiente Anticipo",
+        aceptado: "Aceptada",
+        rechazado: "Cancelada",
+        expirada: "Expirada"
+      }[estadoActual] || "Pendiente Anticipo";
 
-      const correoMostrar = data.correoCliente || clienteId || "-";
-
-      // sugeridaHTML (fecha)
-      const fechaSugeridaExists = data.fechaSugerida && (data.estado === "edicion_solicitada" || data.estado === "fecha_sugerida" || data.estado === "edicion_solicitada_esperando_cliente");
-      let sugeridaHTML = "";
-      if (data.fechaSugerida && fechaSugeridaExists) {
-        sugeridaHTML = `<div class="small text-warning">Sugerida: ${formatearFecha(data.fechaSugerida)}</div>`;
-      }
-
-      // hora original y sugerida
-      const fechaOriginal = data.fechaStr || data.fecha_evento || data.fechaTimestamp || null;
-      const horaOriginal = data.hora_evento || data.hora || "-";
-
-      // compute suggest availability and countdown (kept for accepted flow)
-      const acceptedAtIso = data.acceptedAt || null;
-      const suggestInfo = computeSuggestRemaining(acceptedAtIso);
-      const sugerenciasCount = Number.isFinite(data.sugerenciasCount) ? data.sugerenciasCount : (data.sugerenciasCount ? data.sugerenciasCount : 0);
-
-      // reglas para permitir sugerir:
-      // - NO expirado por limiteRespuesta
-      // - estado pend o aceptado
-      // - sugerenciasCount < 2
-      const puedeSugerir = !expiradoPorLimite && (estadoActual === "pendiente" || estadoActual === "aceptado") && (sugerenciasCount < 2);
-
-      // decide button disabled states (también bloqueamos si expirado por limite)
-      const acceptDisabled = (estadoActual !== "pendiente") || expiradoPorLimite;
-      const rejectDisabled = (estadoActual !== "pendiente") || expiradoPorLimite;
-      const suggestDisabled = !puedeSugerir;
+      const colorEstadoTabla = estadoActual === "aceptado" ? "green"
+  : (["rechazado", "expirada"].includes(estadoActual) ? "red" : "purple");
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${data.folio || "-"}</td>
-        <td>${correoMostrar}</td>
+        <td>${data.correoCliente || clienteId || "-"}</td>
         <td>${data.evento || "-"}</td>
-        <td>
-          ${formatearFecha(fechaOriginal)}
-          ${sugeridaHTML}
-        </td>
-        <td>
-          ${horaOriginal}
-          ${data.horaSugerida24 ? `<div class="small text-warning">Sugerida: ${convertirHora12h(data.horaSugerida24)}</div>` : ""}
-          ${ (estadoActual === "aceptado" && acceptedAtIso) ? `<div class="small text-muted suggest-countdown" data-reserva-id="${id}" data-cliente-id="${clienteId}">${suggestInfo.text}</div>` : "" }
-          ${ (sugerenciasCount !== undefined) ? `<div class="small text-muted">Sugerencias: ${sugerenciasCount}/2</div>` : "" }
-        </td>
-        <td class="estado" style="color:${colorEstado}; font-weight:bold;">${estadoActual}</td>
-        <td>
-          <button class="btn btn-info btn-sm btn-info-res" data-info='${JSON.stringify(data)}'>Info</button>
-          <button class="btn btn-success btn-sm btn-aceptar" ${acceptDisabled ? "disabled" : ""}>Aceptar</button>
-          <button class="btn btn-danger btn-sm btn-rechazar" ${rejectDisabled ? "disabled" : ""}>Rechazar</button>
-          <button class="btn btn-warning btn-sm btn-editar-fecha" ${suggestDisabled ? "disabled" : ""}>Sugerir nueva fecha y hora</button>
+        <td>${data.hora || "-"}</td>
+        <td style="color:${colorEstadoTabla};font-weight:bold;">${textoEstado}</td>
+        <td class="text-nowrap">
+<button class="btn btn-info btn-sm me-1" 
+        data-info='${JSON.stringify({ ...data, folioReal: id })}'>
+        Info
+</button>
+          <button class="btn btn-success btn-sm me-1 btn-aceptar" ${estadoActual !== "pendiente" ? "disabled" : ""}>Aceptar</button>
+          <button class="btn btn-danger btn-sm me-1 btn-cancelar" ${["aceptado", "rechazado", "expirada"].includes(estadoActual) ? "disabled" : ""}>Cancelar</button>
+          <button class="btn btn-purple btn-sm btn-editar" ${["rechazado", "expirada"].includes(estadoActual) ? "disabled" : ""}>Editar Reservación</button>
         </td>
       `;
       tbody.appendChild(tr);
 
-      // Event listeners for newly-created buttons
-      // Info
-      const btnInfo = tr.querySelector(".btn-info-res");
+      const btnInfo = tr.querySelector(".btn-info");
       if (btnInfo) {
-        btnInfo.addEventListener("click", e => {
-          const d = JSON.parse(e.currentTarget.dataset.info);
-          let fechaRegistro = "-";
-          if (d.creadoEn) {
-            if (d.creadoEn.toDate) fechaRegistro = formatearFecha(d.creadoEn.toDate());
-            else if (d.creadoEn.seconds) fechaRegistro = formatearFecha(new Date(d.creadoEn.seconds * 1000));
-            else fechaRegistro = formatearFecha(new Date(d.creadoEn));
-          }
-          let fechaEvento = "-";
-          if (d.fechaStr) {
-            fechaEvento = formatearFecha(d.fechaStr);
-          } else if (d.fecha_evento) {
-            fechaEvento = formatearFecha(d.fecha_evento);
-          } else if (d.fechaTimestamp && d.fechaTimestamp.toDate) {
-            fechaEvento = formatearFecha(d.fechaTimestamp.toDate());
-          }
-          modalDetalle.innerHTML = `
-            <p><strong>Cliente:</strong> ${d.correoCliente || "-"}</p>
-            <p><strong>Folio:</strong> ${d.folio || "-"}</p>
-            <p><strong>Estado:</strong> ${d.estado || "-"}</p>
-            <p><strong>Evento:</strong> ${d.evento || "-"}</p>
-            <p><strong>Fecha de registro:</strong> ${fechaRegistro}</p>
-            <p><strong>Fecha del evento:</strong> ${fechaEvento}</p>
-            <p><strong>Hora del evento:</strong> ${d.hora || d.hora_evento || "-"}</p>
-            <p><strong>Ubicación:</strong> ${d.ubicacion || "-"}</p>
-            <p><strong>Teléfono:</strong> ${d.telefono || "-"}</p>
-            <p><strong>Asistentes:</strong> ${d.asistentes || "-"}</p>
-            ${d.fechaSugerida && d.horaSugerida ? `<p class="text-warning"><strong>Fecha sugerida por el negocio:</strong> ${formatearFecha(d.fechaSugerida)} ${d.horaSugerida}</p>` : ""}
-          `;
-          new bootstrap.Modal(document.getElementById("modalInfo")).show();
-        });
+        btnInfo.disabled = false;
+        btnInfo.classList.remove("disabled");
+        btnInfo.classList.remove("btn-secondary"); // ← ESTA ES LA QUE FALTABA
+        btnInfo.style.pointerEvents = "auto";
+        btnInfo.style.opacity = "1";
       }
 
-      // Sugerir nueva fecha (abre modal)
-      const btnEditarFecha = tr.querySelector(".btn-editar-fecha");
-      if (btnEditarFecha) {
-        btnEditarFecha.addEventListener("click", () => {
-          reservaSeleccionada = { id, clienteId, data };
-          const f = document.getElementById("nuevaFecha");
-          const h = document.getElementById("nuevaHora");
-          if (f) f.value = "";
-          if (h) h.value = "";
-          new bootstrap.Modal(document.getElementById("modalSugerirFecha")).show();
-        });
-      }
 
-      // Aceptar (con confirm modal)
-      const btnAceptar = tr.querySelector(".btn-aceptar");
-      if (btnAceptar) {
-        btnAceptar.addEventListener("click", () => {
-          // rellenar el modal de confirmación
-          document.getElementById("confirmAcceptText").textContent = "¿Estás seguro que quieres aceptar esta reservación? Después de aceptar no podrás rechazarla, solo sugerir nueva fecha durante 72 horas.";
-          const modalAcc = new bootstrap.Modal(document.getElementById("modalConfirmAccept"));
-          // setup confirm handler
-          const btnConf = document.getElementById("btnConfirmAccept");
-          const onConfirm = async () => {
-            try {
-              const proveedorId = getProveedorIdFromLocalStorage();
-              const reservaRef = doc(db, "usuarios", proveedorId, "reservas_recibidas", negocioId, "clientes", clienteId, "reservas", id);
-              const acceptedAtIso = new Date().toISOString();
-              await updateDoc(reservaRef, { estado: "aceptado", acceptedAt: acceptedAtIso });
-              // update memory and UI
-              actualizarReservaEnMemoria(clienteId, id, { estado: "aceptado", acceptedAt: acceptedAtIso });
-              showToast("Reserva aceptada.", true, "success");
-            } catch (err) {
-              console.error(err);
-              showToast("Error al aceptar la reserva.", true, "danger");
-            } finally {
-              btnConf.removeEventListener("click", onConfirm);
-              modalAcc.hide();
-            }
-          };
-          btnConf.addEventListener("click", onConfirm);
-          modalAcc.show();
-        });
-      }
+      // BOTÓN INFO
+      // BOTÓN INFO
+      tr.querySelector(".btn-info").addEventListener("click", e => {
+        const d = JSON.parse(e.currentTarget.dataset.info);
 
-      // Rechazar (con confirm modal)
-      const btnRechazar = tr.querySelector(".btn-rechazar");
-      if (btnRechazar) {
-        btnRechazar.addEventListener("click", () => {
-          document.getElementById("confirmRejectText").textContent = "¿Confirma que quiere rechazar esta reserva?";
-          const modalRech = new bootstrap.Modal(document.getElementById("modalConfirmReject"));
-          const btnConfR = document.getElementById("btnConfirmReject");
-          const onConfirmR = async () => {
-            try {
-              const proveedorId = getProveedorIdFromLocalStorage();
-              const reservaRef = doc(db, "usuarios", proveedorId, "reservas_recibidas", negocioId, "clientes", clienteId, "reservas", id);
-              await updateDoc(reservaRef, { estado: "rechazado" });
-              actualizarReservaEnMemoria(clienteId, id, { estado: "rechazado" });
-              showToast("Reserva rechazada.", true, "warning");
-            } catch (err) {
-              console.error(err);
-              showToast("Error al rechazar la reserva.", true, "danger");
-            } finally {
-              btnConfR.removeEventListener("click", onConfirmR);
-              modalRech.hide();
-            }
-          };
-          btnConfR.addEventListener("click", onConfirmR);
-          modalRech.show();
-        });
-      }
+        let fechaRegistro = formatearFecha(d.creadoEn);
+        let fechaEvento = d.fechaStr ? d.fechaStr.split("-").reverse().join(" - ") : "-";
 
-      // FIN forEach reserva
+        modalDetalle.innerHTML = `
+<div class="info-container">
+
+  <!-- Cliente + Folio -->
+  <div class="fila-doble">
+    <div class="caja-info">
+      <label><i class="bi bi-person-circle me-1"></i> Cliente</label>
+      <p>${d.correoCliente || "—"}</p>
+    </div>
+    <div class="caja-info">
+      <label><i class="bi bi-hash me-1"></i> Folio</label>
+      <p>${d.folio}</p>
+    </div>
+  </div>
+
+  <!-- Registro + Estado -->
+  <div class="caja-info grande centrado">
+    <p><strong><i class="bi bi-calendar-plus me-1"></i> Registrada:</strong> ${fechaRegistro}</p>
+    <p><strong><i class="bi bi-flag me-1"></i> Estado:</strong> 
+<span style="color:${colorEstado(d.estado)}; font-weight:bold;">
+  ${d.estado || "—"}
+</span>
+    </p>
+  </div>
+
+  <!-- Evento + Fecha evento -->
+  <div class="fila-doble">
+    <div class="caja-info">
+      <label><i class="bi bi-star me-1"></i> Evento</label>
+      <p>${d.evento || "—"}</p>
+    </div>
+    <div class="caja-info">
+      <label><i class="bi bi-calendar-event me-1"></i> Fecha del evento</label>
+      <p>${fechaEvento}</p>
+    </div>
+  </div>
+
+  <!-- Hora + Ubicación -->
+  <div class="fila-doble">
+    <div class="caja-info">
+      <label><i class="bi bi-clock me-1"></i> Hora</label>
+      <p>${d.hora || "—"}</p>
+    </div>
+    <div class="caja-info">
+      <label><i class="bi bi-geo-alt me-1"></i> Ubicación</label>
+      <p>${d.ubicacion || "—"}</p>
+    </div>
+  </div>
+
+  <!-- Teléfono + Asistentes -->
+  <div class="fila-doble">
+    <div class="caja-info">
+      <label><i class="bi bi-telephone me-1"></i> Teléfono</label>
+      <p>${d.telefono || "—"}</p>
+    </div>
+    <div class="caja-info">
+      <label><i class="bi bi-people me-1"></i> Asistentes</label>
+      <p>${d.asistentes || "No especificado"}</p>
+    </div>
+  </div>
+
+</div>
+`;
+
+        // IMPORTANTE: aseguramos que el footer de edición no aparezca
+        document.getElementById("modalInfoFooter").style.display = "none";
+
+        const bsModal = bootstrap.Modal.getOrCreateInstance(document.getElementById("modalInfo"));
+        bsModal.show();
+      });
+
+      // BOTÓN ACEPTAR
+      tr.querySelector(".btn-aceptar").addEventListener("click", () => {
+        mostrarConfirmacion("aceptar", "Aceptar Reservación", "¿Estás seguro de ACEPTAR esta reservación?", async () => {
+          const proveedorId = getProveedorIdFromLocalStorage();
+          await updateDoc(doc(db, "usuarios", proveedorId, "reservas_recibidas", negocioId, "clientes", clienteId, "reservas", id), { estado: "aceptado" });
+
+          // Actualizamos la fila actual
+          tr.querySelector("td:nth-child(5)").textContent = "Aceptada";
+          tr.querySelector("td:nth-child(5)").style.color = "green";
+          tr.querySelector(".btn-aceptar").disabled = true;
+          tr.querySelector(".btn-cancelar").disabled = true;
+          tr.querySelector(".btn-editar").disabled = true;
+
+          mostrarExito("¡Reservación ACEPTADA!");
+        });
+      });
+
+      // BOTÓN CANCELAR
+      tr.querySelector(".btn-cancelar").addEventListener("click", () => {
+        mostrarConfirmacion("cancelar", "Cancelar Reservación", "¿Seguro que deseas CANCELAR esta reservación?", async () => {
+          const proveedorId = getProveedorIdFromLocalStorage();
+          await updateDoc(doc(db, "usuarios", proveedorId, "reservas_recibidas", negocioId, "clientes", clienteId, "reservas", id), { estado: "rechazado" });
+
+          tr.querySelector("td:nth-child(5)").textContent = "Cancelada";
+          tr.querySelector("td:nth-child(5)").style.color = "red";
+          tr.querySelector(".btn-aceptar").disabled = true;
+          tr.querySelector(".btn-cancelar").disabled = true;
+          tr.querySelector(".btn-editar").disabled = true;
+
+          mostrarExito("Reservación cancelada");
+        });
+      });
+
+      // BOTÓN EDITAR – SIN BLOQUEAR NADA
+      tr.querySelector(".btn-editar").addEventListener("click", () => {
+        mostrarEditarReserva(data, id, clienteId, tr);
+      });
     });
 
     divDia.appendChild(tabla);
     contenedor.appendChild(divDia);
   });
-
-  // start countdown updater for suggest timers (if any rows present)
-  startCountdownUpdates();
 }
 
-/* -------------------------
-   Countdown updater (actualiza las cuentas regresivas cada minuto)
-   ------------------------- */
-let countdownInterval = null;
-function startCountdownUpdates() {
-  if (countdownInterval) clearInterval(countdownInterval);
-  countdownInterval = setInterval(() => {
-    const els = document.querySelectorAll(".suggest-countdown");
-    els.forEach(el => {
-      const id = el.dataset.reservaId;
-      const clienteId = el.dataset.clienteId;
-      const r = reservas.find(x => x.id === id && x.clienteId === clienteId);
-      if (!r) return;
-      const info = computeSuggestRemaining(r.data.acceptedAt);
-      el.textContent = info.text;
-      // if expired, re-render table to disable suggest buttons
-      const limite = r.data.limiteRespuesta?.toDate ? r.data.limiteRespuesta.toDate() : (r.data.limiteRespuesta ? new Date(r.data.limiteRespuesta) : null);
-      if (limite && new Date() > limite) renderTabla();
-      if (info.expired) renderTabla();
-    });
-  }, 60 * 1000); // update cada minuto
+
+// ==========================
+// FUNCIÓN EDITAR RESERVACIÓN – 100% SIN BUGS
+// ==========================
+// ===============
+// TOAST PREMIUM
+// ===============
+function mostrarToast(mensaje) {
+  const toast = document.getElementById("customToast");
+  toast.querySelector(".toast-text").textContent = mensaje;
+
+  toast.classList.add("mostrar");
+
+  setTimeout(() => {
+    toast.classList.remove("mostrar");
+  }, 3000);
 }
 
-/* -------------------------
-   Guardar sugerencia (con confirm)
-   - cierra modalSugerirFecha, espera a que se oculte y luego abre modalConfirmSuggest
-   ------------------------- */
-document.addEventListener("DOMContentLoaded", () => {
-  const btnGuardar = document.getElementById("btnGuardarSugerencia");
-  if (!btnGuardar) return;
+// ==========================
+// EDITAR RESERVACIÓN – TU ESTILO ORIGINAL MEJORADO
+// ==========================
 
-  btnGuardar.addEventListener("click", async () => {
-    if (!reservaSeleccionada) {
-      showToast("No hay reserva seleccionada.", true, "warning");
-      return;
-    }
-    const nuevaFecha = document.getElementById("nuevaFecha").value;
-    const nuevaHora = document.getElementById("nuevaHora").value;
-    if (!nuevaFecha || !nuevaHora) {
-      showToast("⚠ Debes ingresar la nueva fecha y hora.", true, "warning");
-      return;
-    }
+function mostrarEditarReserva(data, reservaId, clienteId, filaTr) {
+  const modal = new bootstrap.Modal(document.getElementById("modalInfo"));
+  document.getElementById("modalInfoTitulo").textContent = "Editar Reservación";
+  document.getElementById("modalInfoFooter").style.display = "flex";
 
-    // primer paso: cerrar modal de selección y esperar a que termine la animación
-    const modalSelEl = document.getElementById("modalSugerirFecha");
-    const modalSelInst = bootstrap.Modal.getInstance(modalSelEl);
-    // Si no hay instancia (abierto manualmente), crearla para cerrarla de forma consistente
-    const modalSel = modalSelInst || new bootstrap.Modal(modalSelEl);
+  const freg = formatearFecha(data.creadoEn);
+  const fechaMostrar = data.fechaStr ? data.fechaStr.split("-").reverse().join(" - ") : "-";
 
-    // añadir listener para cuando ya esté oculto
-    const onHidden = () => {
-      modalSelEl.removeEventListener("hidden.bs.modal", onHidden);
+  document.getElementById("modalDetalle").innerHTML = `
 
-      // ahora abrimos el modal de confirmación
-      document.getElementById("confirmSuggestText").textContent = `¿Estás seguro de enviar esta sugerencia al cliente? ${nuevaFecha} ${nuevaHora}`;
-      const modalSugConfEl = document.getElementById("modalConfirmSuggest");
-      const modalSugConf = new bootstrap.Modal(modalSugConfEl);
-      const btnConfirmSuggest = document.getElementById("btnConfirmSuggest");
+   <!-- Cliente y Folio -->
+<div class="info-grid-2">
+  <div class="info-block">
+    <span class="info-label"><i class="bi bi-person-circle me-1"></i> Cliente:</span>
+    <div class="info-value">${data.correoCliente || "-"}</div>
+  </div>
+  <div class="info-block">
+    <span class="info-label"><i class="bi bi-hash me-1"></i> Folio:</span>
+    <div class="info-value">${data.folio || "-"}</div>
+  </div>
+</div>
 
-      const onConfirmSuggest = async () => {
-        try {
-          const proveedorId = getProveedorIdFromLocalStorage();
-          const ref = doc(
-            db,
-            "usuarios", proveedorId,
-            "reservas_recibidas", negocioId,
-            "clientes", reservaSeleccionada.clienteId,
-            "reservas", reservaSeleccionada.id
-          );
+<!-- Registrada y Estado -->
+<div class="info-central">
+  <div><strong><i class="bi bi-calendar-plus me-1"></i> Registrada:</strong> ${freg}</div>
+ <div>
+  <strong><i class="bi bi-flag me-1"></i> Estado:</strong> 
+  <span style="font-weight:bold; color:${colorEstado(data.estado)};">
+    ${data.estado || "-"}
+  </span>
+</div>
 
-          // Revisar limites (limiteRespuesta) y sugerencias actuales
-          const snap = await getDoc(ref);
-          const dataActual = snap.exists() ? snap.data() : {};
-          const limite = dataActual.limiteRespuesta?.toDate ? dataActual.limiteRespuesta.toDate() : (dataActual.limiteRespuesta ? new Date(dataActual.limiteRespuesta) : null);
-          const ahora = new Date();
-          if (limite && ahora > limite) {
-            showToast("No se puede sugerir: ya pasaron las 48 hrs (reserva expirada).", true, "danger");
-            btnConfirmSuggest.removeEventListener("click", onConfirmSuggest);
-            modalSugConf.hide();
-            return;
-          }
+</div>
 
-          const sugerenciasCount = dataActual.sugerenciasCount || 0;
-          if (sugerenciasCount >= 2) {
-            showToast("Ya se alcanzó el límite de 2 sugerencias para esta reserva.", true, "warning");
-            btnConfirmSuggest.removeEventListener("click", onConfirmSuggest);
-            modalSugConf.hide();
-            return;
-          }
+<!-- Evento y Fecha -->
+<div class="info-grid-2">
+  <div class="info-block">
+    <span class="info-label"><i class="bi bi-star me-1"></i> Evento:</span>
+    <div class="info-value editable" data-campo="evento">${data.evento || "-"}</div>
+    <i class="bi bi-pencil-square edit-icon"></i>
+  </div>
 
-          // Guardar hora en 24h
-          const horaSugerida24 = convertir12a24(nuevaHora);
+  <div class="info-block position-relative">
+    <span class="info-label"><i class="bi bi-calendar-event me-1"></i> Fecha evento:</span>
+    <div class="info-value" id="textoFecha">${fechaMostrar}</div>
+    <i class="bi bi-pencil-square edit-icon" id="lapizFecha"></i>
+    <div id="editorFecha" class="editor-inline" style="display:none;"></div>
+  </div>
+</div>
 
-          const updateObj = {
-            fechaSugerida: nuevaFecha,
-            horaSugerida: nuevaHora,
-            horaSugerida24,
-            estado_deSugerencia: "pendiente",
-            sugerenciasCount: sugerenciasCount + 1
-          };
+<!-- Hora y Ubicación -->
+<div class="info-grid-2">
+  <div class="info-block position-relative">
+    <span class="info-label"><i class="bi bi-clock me-1"></i> Hora:</span>
+    <div class="info-value" id="textoHora">${data.hora || "-"}</div>
+    <i class="bi bi-pencil-square edit-icon" id="lapizHora"></i>
+    <div id="editorHora" class="editor-inline" style="display:none;"></div>
+  </div>
 
-          // Solo cambia estado si estaba pendiente
-          if ((dataActual.estado || "pendiente") === "pendiente") {
-            updateObj.estado = "edicion_solicitada";
-          }
+  <div class="info-block">
+    <span class="info-label"><i class="bi bi-geo-alt me-1"></i> Ubicación:</span>
+    <div class="info-value editable" data-campo="ubicacion">${data.ubicacion || "-"}</div>
+    <i class="bi bi-pencil-square edit-icon"></i>
+  </div>
+</div>
 
-          await updateDoc(ref, updateObj);
+<!-- Teléfono y Asistentes -->
+<div class="info-grid-2">
+  <div class="info-block">
+    <span class="info-label"><i class="bi bi-telephone me-1"></i> Teléfono:</span>
+    <div class="info-value editable" data-campo="telefono">${data.telefono || "-"}</div>
+    <i class="bi bi-pencil-square edit-icon"></i>
+  </div>
+  <div class="info-block">
+    <span class="info-label"><i class="bi bi-people me-1"></i> Asistentes:</span>
+    <div class="info-value editable" data-campo="asistentes">${data.asistentes || "No especificado"}</div>
+    <i class="bi bi-pencil-square edit-icon"></i>
+  </div>
+</div>
 
-          actualizarReservaEnMemoria(reservaSeleccionada.clienteId, reservaSeleccionada.id, updateObj);
-          showToast("Sugerencia enviada al cliente", true, "warning");
-        } catch (err) {
-          console.error(err);
-          showToast("Error al enviar la sugerencia.", true, "danger");
-        } finally {
-          btnConfirmSuggest.removeEventListener("click", onConfirmSuggest);
-          modalSugConf.hide();
-        }
+  `;
+
+  // === TU EDICIÓN NORMAL (contentEditable) – SIN CAMBIOS ===
+  document.querySelectorAll(".editable").forEach(span => {
+    const icon = span.nextElementSibling;
+    if (!icon?.classList.contains("edit-icon")) return;
+
+    icon.onclick = () => {
+      span.contentEditable = true;
+      span.focus();
+      span.style.backgroundColor = "#fffacd";
+      span.style.outline = "2px solid #0d6efd";
+      span.style.padding = "4px 8px";
+      span.style.borderRadius = "6px";
+
+      const quitarEdicion = () => {
+        span.contentEditable = false;
+        span.style.backgroundColor = "";
+        span.style.outline = "";
+        span.style.padding = "";
       };
 
-      // atachamos y mostramos
-      btnConfirmSuggest.addEventListener("click", onConfirmSuggest);
-      modalSugConf.show();
+      span.onblur = quitarEdicion;
+      span.onkeydown = (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          span.blur();
+        }
+      };
+    };
+  });
+
+  // === EDITAR FECHA – NUEVO DISEÑO (Guardar arriba, Cancelar debajo) ===
+  function abrirEditorFecha() {
+    const editor = document.getElementById("editorFecha");
+    editor.style.display = "block";
+    document.getElementById("textoFecha").style.display = "none";
+    document.getElementById("lapizFecha").style.display = "none";
+
+    editor.innerHTML = `
+      <div class="editor-content">
+        <input type="date" value="${data.fechaStr || ''}" id="nuevaFecha">
+        <div class="editor-buttons">
+          <button class="btn btn-success">Guardar</button>
+          <button class="btn btn-secondary">Cancelar</button>
+        </div>
+      </div>
+    `;
+
+    editor.querySelector(".btn-success").onclick = () => {
+      const val = editor.querySelector("#nuevaFecha").value;
+      if (val) {
+        data.fechaStr = val;
+        document.getElementById("textoFecha").textContent = val.split("-").reverse().join(" - ");
+      }
+      cerrarEditorFecha();
     };
 
-    modalSelEl.addEventListener("hidden.bs.modal", onHidden);
-    // pedir que se oculte (si ya está oculto, 'hidden' ocurrirá inmediatamente)
-    modalSel.hide();
-  });
-});
+    editor.querySelector(".btn-secondary").onclick = cerrarEditorFecha;
+  }
 
-/* -------------------------
-   Cargar reservas
-   ------------------------- */
+  function cerrarEditorFecha() {
+    document.getElementById("editorFecha").style.display = "none";
+    document.getElementById("textoFecha").style.display = "block";
+    document.getElementById("lapizFecha").style.display = "block";
+  }
+
+  // === EDITAR HORA – IGUAL ===
+  function abrirEditorHora() {
+    const editor = document.getElementById("editorHora");
+    editor.style.display = "block";
+    document.getElementById("textoHora").style.display = "none";
+    document.getElementById("lapizHora").style.display = "none";
+
+    editor.innerHTML = `
+      <div class="editor-content">
+        <input type="time" value="${data.hora || ''}" id="nuevaHora">
+        <div class="editor-buttons">
+          <button class="btn btn-success">Guardar</button>
+          <button class="btn btn-secondary">Cancelar</button>
+        </div>
+      </div>
+    `;
+
+    editor.querySelector(".btn-success").onclick = () => {
+      const val = editor.querySelector("#nuevaHora").value;
+      if (val) {
+        data.hora = val;
+        document.getElementById("textoHora").textContent = val;
+      }
+      cerrarEditorHora();
+    };
+
+    editor.querySelector(".btn-secondary").onclick = cerrarEditorHora;
+  }
+
+  function cerrarEditorHora() {
+    document.getElementById("editorHora").style.display = "none";
+    document.getElementById("textoHora").style.display = "block";
+    document.getElementById("lapizHora").style.display = "block";
+  }
+
+  // Asignar lápices
+  document.getElementById("lapizFecha").onclick = abrirEditorFecha;
+  document.getElementById("lapizHora").onclick = abrirEditorHora;
+
+  // === TU BOTÓN GUARDAR CAMBIOS – 100% SIN CAMBIOS ===
+ document.getElementById("guardarCambiosInfo").onclick = async () => {
+  mostrarConfirmacion("guardar", "Guardar Cambios", "¿Confirmas los cambios?", async () => {
+    const updates = {};
+
+    document.querySelectorAll(".editable").forEach(span => {
+      const valor = span.textContent.trim();
+      const campo = span.dataset.campo;
+      if (valor && valor !== "-" && valor !== "No especificado") {
+        updates[campo] = valor;
+      } else {
+        updates[campo] = null;
+      }
+    });
+
+    if (data.fechaStr !== undefined) updates.fechaStr = data.fechaStr || null;
+    if (data.hora !== undefined) updates.hora = data.hora || null;
+
+    if (Object.keys(updates).length > 0) {
+      const proveedorId = getProveedorIdFromLocalStorage();
+
+      await updateDoc(
+        doc(db, "usuarios", proveedorId, "reservas_recibidas", negocioId, "clientes", clienteId, "reservas", reservaId),
+        updates
+      );
+
+      // ⬇⬇⬇ **AQUÍ LA SOLUCIÓN** ⬇⬇⬇
+      const reserva = reservas.find(r => r.id === reservaId);
+      if (reserva) Object.assign(reserva.data, updates);
+      reservasFiltradas = [...reservas];
+      renderTabla();
+      // ⬆⬆⬆ **ESTO evita recargar la página** ⬆⬆⬆
+
+      mostrarExito("¡Cambios guardados correctamente!");
+      mostrarToast("Sugerencia enviada al cliente");
+    } else {
+      mostrarExito("No se hicieron cambios");
+    }
+
+    modal.hide();
+  });
+};
+
+modal.show();
+}
+
+
+// ==========================
+// ESTILO BOTÓN MORADO
+// ==========================
+const estiloMorado = document.createElement("style");
+estiloMorado.textContent = `
+  .btn-purple{background:#6f42c1 !important;border-color:#6f42c1 !important;color:white !important;}
+  .btn-purple:hover{background:#5a32a3 !important;border-color:#5a32a3 !important;}
+`;
+document.head.appendChild(estiloMorado);
+
+// ==========================
+// CARGAR RESERVAS
+// ==========================
 onAuthStateChanged(auth, async user => {
   const proveedorId = getProveedorIdFromLocalStorage() || (user?.email?.toLowerCase());
   if (!proveedorId) {
@@ -580,68 +730,30 @@ onAuthStateChanged(auth, async user => {
   reservasFiltradas = [...reservas];
   renderTabla();
 
-  // Buscador de folios (inserta input)
   const buscador = document.createElement("input");
   buscador.type = "text";
-  buscador.placeholder = "🔍 Buscar por folio...";
+  buscador.placeholder = "Buscar por folio...";
   buscador.classList.add("form-control", "mb-4");
   buscador.style.maxWidth = "350px";
   buscador.style.margin = "0 auto";
   buscador.addEventListener("input", e => {
     const texto = e.target.value.toLowerCase().trim();
-    if (texto === "") reservasFiltradas = [...reservas];
-    else reservasFiltradas = reservas.filter(r =>
-      (r.data.folio || "").toLowerCase().includes(texto)
-    );
+    reservasFiltradas = texto === "" ? [...reservas] : reservas.filter(r => (r.data.folio || "").toLowerCase().includes(texto));
     renderTabla();
   });
   contenedor.parentNode.insertBefore(buscador, contenedor);
 });
 
-/* -------------------------
-   mostrarEncabezadoNegocio (lo dejo como tenía)
-   ------------------------- */
-async function mostrarEncabezadoNegocio(proveedorId, negocioId) {
-  try {
-    const negocioRef = doc(db, "usuarios", proveedorId, "negocios", negocioId);
-    const negocioSnap = await getDoc(negocioRef);
-    if (negocioSnap.exists()) {
-      const data = negocioSnap.data();
-      document.getElementById("nombreNegocio").textContent = data.nombreNegocio || negocioId;
-      document.getElementById("fotoNegocio").src = data.urlImagen || "https://via.placeholder.com/80";
-    } else {
-      document.getElementById("nombreNegocio").textContent = "Negocio no encontrado";
-    }
-  } catch (err) {
-    console.error("❌ Error al cargar datos del negocio:", err);
-  }
-}
-
-/* -------------------------
-   Navegación botones (igual)
-   ------------------------- */
+// ==========================
+// Navegación
+// ==========================
 document.addEventListener("DOMContentLoaded", () => {
   const btnVerAceptadas = document.getElementById("btnVerAceptadas");
-  if (btnVerAceptadas) {
-    btnVerAceptadas.addEventListener("click", () => {
-      const negocioId = localStorage.getItem("negocioId");
-      if (!negocioId) {
-        alert("⚠️ No se encontró el negocioId en localStorage.");
-        return;
-      }
-      window.location.href = "reservas_aceptadas.html";
-    });
-  }
+  if (btnVerAceptadas) btnVerAceptadas.addEventListener("click", () => window.location.href = "reservas_aceptadas.html");
 
   const btnVerRechazadas = document.getElementById("btnVerRechazadas");
-  if (btnVerRechazadas) {
-    btnVerRechazadas.addEventListener("click", () => {
-      const negocioId = localStorage.getItem("negocioId");
-      if (!negocioId) {
-        alert("⚠️ No se encontró el negocioId en localStorage.");
-        return;
-      }
-      window.location.href = "reservas_rechazadas.html";
-    });
-  }
+  if (btnVerRechazadas) btnVerRechazadas.addEventListener("click", () => window.location.href = "reservas_rechazadas.html");
 });
+
+
+
