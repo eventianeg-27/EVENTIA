@@ -41,6 +41,35 @@ const meses = [
 ];
 
 // ==========================
+// 🧩 Convertir fecha independientemente del formato
+// ==========================
+function parseFechaEvento(data) {
+  // 1) Si viene como fechaStr = "2025-12-07"
+  if (data.fechaStr) {
+    const [yyyy, mm, dd] = data.fechaStr.split("-").map(Number);
+    return new Date(yyyy, mm - 1, dd);
+  }
+
+  // 2) Si viene como Firestore Timestamp
+  if (data.fecha?.toDate) {
+    return data.fecha.toDate();
+  }
+
+  // 3) Si viene como Date normal
+  if (data.fecha instanceof Date) {
+    return data.fecha;
+  }
+
+  // 4) Si viene string tipo "07/12/2025"
+  if (typeof data.fecha === "string" && data.fecha.includes("/")) {
+    const [dd, mm, yyyy] = data.fecha.split("/").map(Number);
+    return new Date(yyyy, mm - 1, dd);
+  }
+
+  return null;
+}
+
+// ==========================
 // 📆 Render barra de meses
 // ==========================
 function renderMonthBar() {
@@ -58,7 +87,7 @@ function renderMonthBar() {
 }
 
 // ==========================
-// 📅 Render calendario
+// 📅 Render calendario POR FECHA DEL EVENTO
 // ==========================
 function renderCalendar() {
   const year = currentDate.getFullYear();
@@ -78,26 +107,19 @@ function renderCalendar() {
     const cell = document.createElement("div");
     cell.innerHTML = `<strong>${d}</strong>`;
 
-    // Filtrar reservas de este día
+    // Filtrar reservas por FECHA DE EVENTO
     const reservasDia = eventos.filter(ev => {
-      let fechaEv;
-      if (ev.fechaStr) {
-        const [yyyy, mm, dd] = ev.fechaStr.split("-").map(Number);
-        fechaEv = new Date(yyyy, mm - 1, dd);
-      } else if (ev.fecha?.toDate) {
-        fechaEv = ev.fecha.toDate();
-      } else {
-        fechaEv = new Date(ev.fecha);
-      }
-
       return (
-        fechaEv.getFullYear() === year &&
-        fechaEv.getMonth() === month &&
-        fechaEv.getDate() === d
+        ev.fechaEvento &&
+        ev.fechaEvento.getFullYear() === year &&
+        ev.fechaEvento.getMonth() === month &&
+        ev.fechaEvento.getDate() === d
       );
     });
 
     if (reservasDia.length > 0) {
+      cell.classList.add("event-day");
+
       reservasDia.forEach(ev => {
         const info = document.createElement("div");
         info.className = "event-info";
@@ -112,7 +134,6 @@ function renderCalendar() {
         btn.addEventListener("click", () => mostrarInfo(ev));
         cell.appendChild(btn);
       });
-      cell.classList.add("event-day");
     }
 
     calendarGrid.appendChild(cell);
@@ -126,7 +147,7 @@ function mostrarInfo(ev) {
   modalDetalle.innerHTML = `
     <p><strong>Cliente:</strong> ${ev.clienteId}</p>
     <p><strong>Evento:</strong> ${ev.evento || "-"}</p>
-    <p><strong>Fecha:</strong> ${ev.fechaStr || (ev.fecha instanceof Date ? ev.fecha.toLocaleDateString() : "-")}</p>
+    <p><strong>Fecha:</strong> ${ev.fechaEvento ? ev.fechaEvento.toLocaleDateString() : "-"}</p>
     <p><strong>Hora:</strong> ${ev.hora || "-"}</p>
     <p><strong>Ubicación:</strong> ${ev.ubicacion || "-"}</p>
     <p><strong>Teléfono:</strong> ${ev.telefono || "-"}</p>
@@ -162,14 +183,12 @@ onAuthStateChanged(auth, async user => {
   }
 
   try {
-    // 🔹 Obtener todos los clientes dentro del negocio
     const clientesSnap = await getDocs(
       collection(db, "usuarios", proveedorId, "reservas_recibidas", negocioId, "clientes")
     );
 
     eventos = [];
 
-    // 🔹 Recorrer cada cliente y traer sus reservas
     for (const clienteDoc of clientesSnap.docs) {
       const clienteId = clienteDoc.id;
       const reservasRef = collection(
@@ -186,12 +205,14 @@ onAuthStateChanged(auth, async user => {
 
       reservasSnap.forEach(rDoc => {
         const data = rDoc.data();
+
         if (data.estado === "aceptado") {
+          const fechaEvento = parseFechaEvento(data);
+
           eventos.push({
             id: rDoc.id,
             clienteId,
-            fecha: data.fecha || null,
-            fechaStr: data.fechaStr || null,
+            fechaEvento,
             evento: data.evento || "",
             hora: data.hora || "",
             ubicacion: data.ubicacion || "",
