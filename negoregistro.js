@@ -3,6 +3,23 @@ import {
   getFirestore, doc, setDoc
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
+// ⭐⭐⭐ AGREGA AQUÍ la función global SweetAlert ⭐⭐⭐
+function mostrarAlerta(titulo, texto, icono = "warning", redirigir = false) {
+  Swal.fire({
+    title: titulo,
+    text: texto,
+    icon: icono,
+    confirmButtonText: "Aceptar",
+    confirmButtonColor: "#3085d6",
+  }).then((result) => {
+    if (redirigir && result.isConfirmed) {
+      window.location.href = "planes.html";
+    }
+  });
+}
+
+
+
 //  Configuración de Firebase (del primer código)
 const firebaseConfig = {
   apiKey: "AIzaSyBhX59jBh2tUkEnEGcb9sFVyW2zJe9NB_w",
@@ -16,6 +33,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
 
 // Mostrar el plan elegido
 const planTexto = localStorage.getItem("planTexto");
@@ -60,11 +78,10 @@ async function subirImagenACloudinary(file, proveedorId) {
 // -----------------------
 // Estado para especialidades
 // -----------------------
-let MAX_ESPECIALIDADES = 2; // será ajustado según el plan
-let especialidadesState = []; // array de objetos {nombre, descripcion, archivos: [File,...]}
-const especialidadesContainer = document.getElementById("especialidadesContainer");
-const btnAgregarEspecialidad = document.getElementById("btnAgregarEspecialidad");
-
+let MAX_SERVICIOS = 1;
+let serviciosState = [];
+const serviciosContainer = document.getElementById("especialidadesContainer");
+const btnAgregarServicio = document.getElementById("btnAgregarEspecialidad");
 
 
 // -------------------
@@ -72,51 +89,66 @@ const btnAgregarEspecialidad = document.getElementById("btnAgregarEspecialidad")
 // -------------------
 
 document.addEventListener("DOMContentLoaded", () => {
-    const plan = localStorage.getItem("planTexto");
+  const plan = localStorage.getItem("planTexto") || "";
 
-    if (plan === "Gratis") {
-        MAX_ESPECIALIDADES = 2;
-    } else if (plan === "Plus") {
-        MAX_ESPECIALIDADES = 5;
-    } else if (plan === "Premium") {
-        MAX_ESPECIALIDADES = 5;
-    }
+  if (plan.includes("Gratis")) {
+    MAX_SERVICIOS = 1;
+  } else if (plan.includes("Plus")) {
+    MAX_SERVICIOS = 3; // AHORA PLUS SOLO PERMITE 3
+  } else if (plan.includes("Premium")) {
+    MAX_SERVICIOS = 5; // Premium sigue permitiendo 5
+  }
 
-    actualizarBotonAgregar(); // ← importante
 
-    // iniciar con una tarjeta
+  // Agregar tarjeta inicial
+  if (serviciosState.length === 0) {
     agregarTarjetaEspecialidad();
+  }
 
-    // Cambiar texto visible del límite
-    const textoMax = document.getElementById("textoMaxEspecialidades");
-    if (textoMax) {
-        textoMax.textContent = `Máximo ${MAX_ESPECIALIDADES} especialidades.`;
-    }  
+  actualizarBotonAgregar();
+
+  const textoMax = document.getElementById("textoMaxEspecialidades");
+  if (textoMax) {
+    textoMax.textContent = `Máximo ${MAX_SERVICIOS} servicios.`;
+  }
 });
 
 
-
-
-
-
 function agregarTarjetaEspecialidad(fromRebuild = false, data = null) {
-  if (!fromRebuild && especialidadesState.length >= MAX_ESPECIALIDADES) {
-    alert(`Solo puedes agregar hasta ${MAX_ESPECIALIDADES} especialidades.`);
+  if (serviciosState.length >= MAX_SERVICIOS && !fromRebuild) {
+    if (MAX_SERVICIOS === 1) {
+      mostrarAlerta(
+        "Límite alcanzado",
+        "Tu plan Gratis solo permite 1 servicio.\nActualiza tu plan para agregar más.",
+        "warning",
+        true
+      );
+    } else {
+      mostrarAlerta(
+        "Límite alcanzado",
+        `El plan ${localStorage.getItem("planTexto")} permite máximo ${MAX_SERVICIOS} servicios.`,
+        "warning",
+        MAX_SERVICIOS < 5 // redirige si es Gratis o Plus
+      );
+    }
     return;
   }
 
-  const index = especialidadesState.length;
+
+
+
+  const index = serviciosState.length;
 
   // Si es reconstrucción, cargar datos previos
   if (fromRebuild && data) {
-    especialidadesState.push({
+    serviciosState.push({
       nombre: data.nombre || "",
       descripcion: data.descripcion || "",
       archivos: data.archivos || []
     });
   } else {
     // Estado inicial normal
-    especialidadesState.push({
+    serviciosState.push({
       nombre: "",
       descripcion: "",
       archivos: []
@@ -132,10 +164,10 @@ function agregarTarjetaEspecialidad(fromRebuild = false, data = null) {
       <span class="badge bg-secondary">#${index + 1}</span>
     </div>
 
-    <h6>Especialidad ${index + 1}</h6>
+    <h6>Servicio ${index + 1}</h6>
 
     <div class="mb-2">
-      <select class="form-select select-especialidad mb-2" data-index="${index}">
+      <select class="form-select select-servicio mb-2" data-index="${index}">
         <option value="">Seleccione una</option>
         <option>Fotografía y Video</option>
         <option>Decoración y Ambientación</option>
@@ -150,7 +182,7 @@ function agregarTarjetaEspecialidad(fromRebuild = false, data = null) {
       <button type="button" class="btn btn-outline-primary btn-sm btn-evidencia" data-index="${index}">
         <i class="fas fa-paperclip me-1"></i> Subir fotos / videos
       </button>
-      <br><small class="small-muted d-block mt-2">Hasta 4 archivos por especialidad (imágenes o videos)</small>
+      <br><small class="small-muted d-block mt-2">Hasta 4 archivos por servicio (imágenes o videos)</small>
 
       <div class="evidencias-list" id="evidencias-list-${index}"></div>
     </div>
@@ -158,13 +190,12 @@ function agregarTarjetaEspecialidad(fromRebuild = false, data = null) {
     <br><button type="button" class="btn btn-danger btn-sm btn-eliminar-tarjeta" data-index="${index}">Eliminar</button>
   `;
 
-  especialidadesContainer.appendChild(card);
-
+  serviciosContainer.appendChild(card);
 
 
   // referencias a los botones / inputs
   const btnEvid = card.querySelector(".btn-evidencia");
-  const select = card.querySelector(".select-especialidad");
+  const select = card.querySelector(".select-servicio");
   const textarea = card.querySelector(".descripcion-especialidad");
   const btnEliminar = card.querySelector(".btn-eliminar-tarjeta");
 
@@ -184,13 +215,14 @@ function agregarTarjetaEspecialidad(fromRebuild = false, data = null) {
   document.body.appendChild(inputFile);
 
   btnEvid.addEventListener("click", () => {
-    const current = especialidadesState[index];
+    const current = serviciosState[index];
 
     // 🚫 BLOQUEAR el botón si ya hay 4 archivos
     if (current.archivos.length >= 4) {
-      alert("Máximo 4 archivos por especialidad.");
+      mostrarAlerta("Límite de archivos", "Máximo 4 archivos por servicio.");
       return;
     }
+
 
     inputFile.click();
   });
@@ -200,7 +232,7 @@ function agregarTarjetaEspecialidad(fromRebuild = false, data = null) {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
-    const current = especialidadesState[index];
+    const current = serviciosState[index];
     // limitar a 6 archivos por especialidad
     if ((current.archivos.length + files.length) > 4) {
       alert("Máximo 4 archivos por especialidad.");
@@ -214,19 +246,20 @@ function agregarTarjetaEspecialidad(fromRebuild = false, data = null) {
   });
 
   select.addEventListener("change", (e) => {
-    especialidadesState[index].nombre = e.target.value;
+    serviciosState[index].nombre = e.target.value;
   });
 
   textarea.addEventListener("input", (e) => {
-    especialidadesState[index].descripcion = e.target.value;
+    serviciosState[index].descripcion = e.target.value;
   });
 
   btnEliminar.addEventListener("click", () => {
     // si solo hay 1 tarjeta, no permitir eliminarla (mínimo 1)
-    if (especialidadesState.length <= 1) {
-      alert("Debe existir al menos una especialidad.");
+    if (serviciosState.length <= 1) {
+      mostrarAlerta("Acción no permitida", "Debe existir al menos una especialidad.");
       return;
     }
+
     eliminarTarjeta(index);
   });
 
@@ -242,7 +275,7 @@ function renderEvidenciasTarjeta(index) {
   listEl.classList.add("evidencias-grid");
 
 
-  const archivos = especialidadesState[index].archivos || [];
+  const archivos = serviciosState[index].archivos || [];
   archivos.forEach((file, i) => {
     const wrapper = document.createElement("div");
     wrapper.style.position = "relative";
@@ -260,7 +293,7 @@ function renderEvidenciasTarjeta(index) {
     btnRemove.style.right = "-6px";
 
     btnRemove.addEventListener("click", () => {
-      especialidadesState[index].archivos.splice(i, 1);
+      serviciosState[index].archivos.splice(i, 1);
       renderEvidenciasTarjeta(index);
     });
 
@@ -271,17 +304,17 @@ function renderEvidenciasTarjeta(index) {
 }
 
 function eliminarTarjeta(index) {
-  if (especialidadesState.length <= 1) {
+  if (serviciosState.length <= 1) {
     alert("Debe existir al menos una especialidad.");
     return;
   }
 
   // 1. Guardar copia de los datos restantes
-  const temp = especialidadesState.filter((_, i) => i !== index);
+  const temp = serviciosState.filter((_, i) => i !== index);
 
   // 2. Vaciar el contenedor visual y el estado
-  especialidadesContainer.innerHTML = "";
-  especialidadesState = [];
+  serviciosContainer.innerHTML = "";
+  serviciosState = [];
 
   // 3. Recrear las tarjetas PASANDO LOS DATOS
   temp.forEach(data => agregarTarjetaEspecialidad(true, data));
@@ -292,16 +325,49 @@ function eliminarTarjeta(index) {
 
 // actualizar estado del botón agregar
 function actualizarBotonAgregar() {
-  if (especialidadesState.length >= MAX_ESPECIALIDADES) {
-    btnAgregarEspecialidad.disabled = true;
-    btnAgregarEspecialidad.classList.add("disabled");
-  } else {
-    btnAgregarEspecialidad.disabled = false;
-    btnAgregarEspecialidad.classList.remove("disabled");
-  }
+  btnAgregarServicio.disabled = false;
+  btnAgregarServicio.classList.remove("disabled");
 }
 
+
 btnAgregarEspecialidad.addEventListener("click", () => {
+
+  if (serviciosState.length >= MAX_SERVICIOS) {
+
+    const plan = localStorage.getItem("planTexto") || "";
+
+    if (MAX_SERVICIOS === 1) {
+      // PLAN GRATIS
+      mostrarAlerta(
+        "Límite alcanzado",
+        "Tu plan Gratis solo permite agregar 1 servicio.\nActualiza tu plan para obtener más.",
+        "warning",
+        true  // ⬅️ REDIRIGE
+      );
+
+
+    } else if (MAX_SERVICIOS === 3) {
+      // PLAN PLUS -> ALERTA DE SUBIR A PREMIUM
+      mostrarAlerta(
+        "¡Límite del plan Plus!",
+        "Tu plan Plus permite máximo 3 servicios.\nSube al plan Premium para agregar más.",
+        "warning",
+        true  // ⬅️ REDIRIGE
+      );
+
+    } else if (MAX_SERVICIOS === 5) {
+      // PLAN PREMIUM
+      mostrarAlerta(
+        "Límite alcanzado",
+        "El plan Premium permite máximo 5 servicios.",
+        "warning",
+        false // ⬅️ Premium no necesita redirigir
+      );
+    }
+
+    return;
+  }
+
   agregarTarjetaEspecialidad();
 });
 
@@ -395,44 +461,44 @@ document.getElementById("btnRegistro").addEventListener("click", async () => {
 
 
   // Subir evidencias
-evidenciasUrls.length = 0;
-for (const file of archivosEvidencias) {
-  try {
-    const url = await subirImagenACloudinary(file, proveedorId);
-    evidenciasUrls.push(url);
-  } catch (error) {
-    console.error("Error al subir evidencia:", error);
-    return alert("Error al subir una de las evidencias.");
-  }
-}
-
-// ⭐⭐⭐ SUBIR ARCHIVOS DE CADA ESPECIALIDAD ⭐⭐⭐
-for (let i = 0; i < especialidadesState.length; i++) {
-  const esp = especialidadesState[i];
-
-  const urls = [];
-
-  for (const file of esp.archivos) {
+  evidenciasUrls.length = 0;
+  for (const file of archivosEvidencias) {
     try {
       const url = await subirImagenACloudinary(file, proveedorId);
-      urls.push(url);
+      evidenciasUrls.push(url);
     } catch (error) {
-      console.error("Error al subir archivo de especialidad:", error);
-      alert("Error al subir archivos de una especialidad.");
-      return;
+      console.error("Error al subir evidencia:", error);
+      return alert("Error al subir una de las evidencias.");
     }
   }
 
-  // Reemplazamos los File objects con URLs
-  esp.archivos = urls;
-}
+  // ⭐⭐⭐ SUBIR ARCHIVOS DE CADA ESPECIALIDAD ⭐⭐⭐
+  for (let i = 0; i < serviciosState.length; i++) {
+    const esp = serviciosState[i];
+
+    const urls = [];
+
+    for (const file of esp.archivos) {
+      try {
+        const url = await subirImagenACloudinary(file, proveedorId);
+        urls.push(url);
+      } catch (error) {
+        console.error("Error al subir archivo de especialidad:", error);
+        alert("Error al subir archivos de una especialidad.");
+        return;
+      }
+    }
+
+    // Reemplazamos los File objects con URLs
+    esp.archivos = urls;
+  }
 
 
   const negocio = document.getElementById("negocio").value.trim();
   const telefono = document.getElementById("telefono").value.trim();
   const ubicacionTexto = document.getElementById("ubicacion").value.trim();
   // Obtener especialidades desde las tarjetas dinámicas
-  const especialidadesFinal = especialidadesState.map(item => ({
+  const especialidadesFinal = serviciosState.map(item => ({
     nombre: item.nombre || "",
     descripcion: item.descripcion || "",
     galeria: item.archivos || []
@@ -489,7 +555,7 @@ for (let i = 0; i < especialidadesState.length; i++) {
     ubicacion: ubicacionTexto,
     ubicacionLink, // Guardar el enlace a Google Maps
     especialidades: especialidadesFinal,
-    //especialidades: especialidadesState,
+    //especialidades: serviciosState,
     diasAbierto: diasSeleccionados,
     horaApertura: horaApertura,
     horaCierre: horaCierre,
@@ -628,9 +694,9 @@ function reindexarTarjetas() {
   });
 
   // Reordenar el estado interno eliminando elementos marcados como "eliminados"
-  especialidadesState = especialidadesState.filter(e => !e.eliminada);
+  serviciosState = serviciosState.filter(e => !e.eliminada);
 
   // Volver a asignar índices correctos al state
-  especialidadesState = especialidadesState.map((e, i) => ({ ...e, index: i }));
+  serviciosState = serviciosState.map((e, i) => ({ ...e, index: i }));
 }
 
