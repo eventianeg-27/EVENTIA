@@ -106,3 +106,42 @@ button.btn {
 #contenidoProveedor .fachada-negocio img {
   margin-top: 0.75rem; /* puedes ajustar a 1rem si quieres más separación */
 }
+
+.nombre-negocio {
+  color: #007bff;             /* Azul brillante */
+  font-weight: 700;           /* Más grueso que bold */
+  
+  font-family: 'Segoe UI', sans-serif;  /* Igual al estilo de Windows */
+  letter-spacing: -0.5px;     /* Para que se vea compacto */
+}
+
+/* DÍA ABIERTO (estilo como la imagen) */
+.dia-abierto {
+  background-color: #007bff;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+}
+
+/* HORARIO (estilo verde como la imagen) */
+.horario-box {
+  background-color: #1f8d55;
+  color: white;
+  padding: 10px 16px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.titulo-servicios {
+  font-size: 1.5rem !important; /* Más pequeño */
+  font-weight: 600;
+  color: #007bff;
+}
+

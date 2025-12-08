@@ -4,14 +4,16 @@
 <head>
   <meta charset="UTF-8" />
   <title>Perfil del Negocio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="perfilNegocio.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getFirestore, doc, getDoc, collection, getDocs, collectionGroup } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-    // ✅ Configuración Firebase (usa la misma que en principal)
     const firebaseConfig = {
       apiKey: "AIzaSyBhX59jBh2tUkEnEGcb9sFVyW2zJe9NB_w",
       authDomain: "eventia-9ead3.firebaseapp.com",
@@ -26,264 +28,190 @@
     const db = getFirestore(app);
 
     const div = document.getElementById("contenidoProveedor");
-
-    // ✅ Ahora usamos el objeto usuarioLogueado
     const usuarioLogueado = JSON.parse(localStorage.getItem("usuarioLogueado") || "{}");
-    const usuario = (usuarioLogueado.correo || "").trim();
-    const negocioId = (localStorage.getItem("negocioId") || "").trim();
+    const proveedorId = (usuarioLogueado.correo || "").trim().toLowerCase();
+    const negocioId = localStorage.getItem("negocioId")?.trim();
 
-    if (!usuario || !negocioId) {
-      div.innerHTML = "<p>Faltan datos para mostrar el perfil del negocio.</p>";
+    if (!proveedorId || !negocioId) {
+      div.innerHTML = "<p class='text-danger text-center'>Error: No se encontraron datos del usuario o negocio.</p>";
     } else {
-      const negocioRef = doc(db, "usuarios", usuario, "negocios", negocioId);
+      const negocioRef = doc(db, "usuarios", proveedorId, "negocios", negocioId);
 
-
-      // 🔧 Convertir hora 24h → AM/PM
-      function convertirHora(hora24) {
-        if (!hora24 || typeof hora24 !== "string") return "No disponible";
-
-        const partes = hora24.split(":");
-        if (partes.length !== 2) return hora24;
-
-        let h = parseInt(partes[0], 10);
-        let m = partes[1];
-
-        if (isNaN(h)) return hora24;
-
-        const sufijo = h >= 12 ? "PM" : "AM";
-        let h12 = (h % 12) || 12;
-
-        return `${h12}:${m.padStart(2, "0")} ${sufijo}`;
-      }
-
-
-      // 🔥 Ver si hoy está abierto y si está dentro del horario
-      function estaAbiertoHoy(diasAbierto) {
-        const diasSemana = [
-          "Domingo", "Lunes", "Martes", "Miércoles",
-          "Jueves", "Viernes", "Sábado"
-        ];
-
-        const hoy = diasSemana[new Date().getDay()];
-        return diasAbierto?.includes(hoy);
-      }
-
-      // 🔥 Convertir "21:00" a minutos para comparar
-      function aMinutos(hora) {
+      function formatoHora(hora) {
+        if (!hora) return "No definido";
         const [h, m] = hora.split(":").map(Number);
-        return h * 60 + m;
+        const periodo = h >= 12 ? "PM" : "AM";
+        const hora12 = h % 12 || 12;
+        return `${hora12}:${m.toString().padStart(2, "0")} ${periodo}`;
       }
 
-      // 🔥 Saber si está dentro del horario actual
-      function estaEnHorario(horaApertura, horaCierre) {
-        if (!horaApertura || !horaCierre) return false;
+      function estaAbiertoAhora(datos) {
+        if (!datos.diasAbierto || !datos.horaApertura || !datos.horaCierre) return false;
+
+        const dias = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+        const hoy = dias[new Date().getDay()];
+        if (!datos.diasAbierto.includes(hoy)) return false;
 
         const ahora = new Date();
         const minutosActual = ahora.getHours() * 60 + ahora.getMinutes();
+        const [ha, ma] = datos.horaApertura.split(":").map(Number);
+        const [hc, mc] = datos.horaCierre.split(":").map(Number);
+        const apertura = ha * 60 + ma;
+        const cierre = hc * 60 + mc;
 
-        const apertura = aMinutos(horaApertura);
-        const cierre = aMinutos(horaCierre);
-
-        // Caso normal (ej: 9 AM → 7 PM)
-        if (apertura < cierre) {
-          return minutosActual >= apertura && minutosActual <= cierre;
-        }
-
-        // Caso cruzando medianoche (ej: 9 PM → 3 AM)
-        return minutosActual >= apertura || minutosActual <= cierre;
+        return apertura < cierre
+          ? minutosActual >= apertura && minutosActual < cierre
+          : minutosActual >= apertura || minutosActual < cierre;
       }
 
-      // 🔥 Genera badge visual
-      function generarEstadoAbierto(datos) {
-        if (!Array.isArray(datos.diasAbierto)) return "";
+      getDoc(negocioRef).then(snap => {
+        if (!snap.exists()) {
+          div.innerHTML = "<p class='text-danger text-center'>No se encontró el negocio.</p>";
+          return;
+        }
 
-        const abiertoHoy = estaAbiertoHoy(datos.diasAbierto);
-        const enHorario = estaEnHorario(datos.horaApertura, datos.horaCierre);
+        const d = snap.data();
+        const negocioIdReal = snap.id; // ← ESTE ES EL ID CORRECTO 100% DEL DOCUMENTO
 
-        if (abiertoHoy && enHorario) {
+        // GUARDAMOS EL ID REAL PARA USARLO AL EDITAR
+        localStorage.setItem("negocioEnEdicion", negocioIdReal);
+
+        // Generar galería por especialidad
+        const especialidadesHTML = (d.especialidades || []).map((esp, i) => {
+          const galeria = (esp.galeria || []).map(url => {
+            const esVideo = url.match(/\.(mp4|webm|ogg|mov)$/i);
+            return `
+              <div class="col-6 col-md-4 col-lg-3 mb-3">
+                ${esVideo
+                ? `<video src="${url}" controls class="img-fluid rounded shadow-sm" style="height: 180px; object-fit: cover; width: 100%;"></video>`
+                : `<img src="${url}" class="img-fluid rounded shadow-sm" style="height: 180px; object-fit: cover;">`
+              }
+              </div>`;
+          }).join("");
+
           return `
-      <span class="badge bg-success px-3 py-2" style="font-size:15px;">
-        🟢 Abierto ahora
-      </span>`;
-        }
+            <div class="card mb-4 shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title text-primary"><i class="fas fa-star me-2"></i>${esp.nombre || "Servicio sin nombre"}</h5>
+                <p class="card-text">${esp.descripcion || "Sin descripción"}</p>
+                ${galeria ? `<hr><h6>Galería:</h6><div class="row">${galeria}</div>` : ""}
+              </div>
+            </div>`;
+        }).join("");
 
-        return `
-    <span class="badge bg-danger px-3 py-2" style="font-size:15px;">
-      🔴 Cerrado
-    </span>`;
-      }
+        const redesHTML = (d.redesSociales || []).map(red => {
+          const usuario = d.usuariosRedes?.[red] || "";
+          const icono = red === "facebook" ? "fab fa-facebook" : red === "instagram" ? "fab fa-instagram" : "fas fa-link";
+          const enlace = usuario ? (red === "otro" ? usuario : `https://${red}.com/${usuario.replace("@", "")}`) : "#";
+          return `
+            <a href="${enlace}" target="_blank" class="me-3 text-decoration-none text-primary">
+              <i class="${icono} fa-lg"></i> ${usuario || red}
+            </a>`;
+        }).join("");
 
+        const abiertoAhora = estaAbiertoAhora(d);
 
-
-      getDoc(negocioRef).then(docSnap => {
-        if (!docSnap.exists()) {
-          div.innerHTML = "<p>No se encontró el negocio.</p>";
-        } else {
-          const datos = docSnap.data();
-
-          const redesHTML = Array.isArray(datos.redesSociales)
-            ? datos.redesSociales.map(red => {
-              const enlace = datos.usuariosRedes?.[red] || "";
-              return enlace
-                ? `<li><strong>${red}:</strong> <a href="${enlace}" target="_blank">${enlace}</a></li>`
-                : `<li><strong>${red}</strong></li>`;
-            }).join("")
-            : "";
-
-          const galeriaHTML = Array.isArray(datos.evidencias)
-            ? datos.evidencias.map(url => `
-              <div class="col-md-4 mb-3">
-                ${url.match(/\.(mp4|webm|ogg)$/i)
-                ? `<video src="${url}" controls style="width: 100%; border-radius: 8px;"></video>`
-                : `<img src="${url}" class="img-fluid rounded" style="border-radius: 8px;" />`}
-              </div>`).join("")
-            : "";
-
-          div.innerHTML = `
-            <div class="d-flex align-items-center mb-4">
-              <img src="${datos.urlImagen || 'default.jpg'}" alt="Foto de perfil" class="rounded-circle me-3" style="width: 100px; height: 100px; object-fit: cover;" />
-              <h4 class="mb-0">${datos.negocio || 'Negocio sin nombre'}</h4>
-            </div>
-            <p><strong>Teléfono:</strong> ${datos.telefono || 'No disponible'}</p>
-            <p><strong>Ubicación:</strong> 
-              ${datos.ubicacionLink
-              ? `<a href="${datos.ubicacionLink}" target="_blank">${datos.ubicacion}</a>`
-              : (datos.ubicacion || 'No disponible')}
+        div.innerHTML = `
+          <div class="text-center mb-4">
+            <img src="${d.urlImagen || 'default.jpg'}" alt="Logo" class="rounded-circle shadow" style="width: 120px; height: 120px; object-fit: cover;">
+            <h3 class="nombre-negocio mt-3">${d.negocio || "Negocio sin nombre"}</h3>
+            <p>
+              ${abiertoAhora
+            ? '<span class="badge bg-success fs-5 px-4 py-2">Abierto ahora</span>'
+            : '<span class="badge bg-danger fs-5 px-4 py-2">Cerrado</span>'
+          }
             </p>
+          </div>
 
-            <!-- Referencia de ubicación -->
-            ${datos.referenciaUbicacion
-              ? `<p><strong>Referencia de ubicación:</strong> ${datos.referenciaUbicacion}</p>`
-              : ''}
+          ${d.urlFachada ? `
+            <div class="text-center mb-4">
+              <img src="${d.urlFachada}" alt="Fachada" class="img-fluid rounded shadow" style="max-height: 300px;">
+              <p class="text-primary fw-bold fs-5 mt-2">
+                <i class="fas fa-store me-2"></i> Fachada del negocio
+              </p>
+            </div>` : ''}
 
-            <!-- Imagen de la fachada -->
-            ${datos.urlFachada
-              ? `<div class="mt-3 fachada-negocio">
-              <h5 class="text-primary"><i class="fas fa-store me-2"></i>Fachada del negocio</h5>
-              <img src="${datos.urlFachada}" alt="Fachada del negocio" 
-                   class="img-fluid rounded shadow-sm" 
-                   style="max-width: 400px; border-radius: 10px;"/>
-             </div>`
-              : ''}
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>Teléfono:</strong> ${d.telefono || "No disponible"}</p>
+              <p><strong>Ubicación:</strong> 
+                ${d.ubicacionLink
+            ? `<a href="${d.ubicacionLink}" target="_blank" class="text-primary">${d.ubicacion}</a>`
+            : d.ubicacion || "No disponible"}
+              </p>
+              ${d.referenciaUbicacion ? `<p><strong>Referencia:</strong> ${d.referenciaUbicacion}</p>` : ""}
+              
+              <p><strong>Horario:</strong><br>
+                <span class="badge bg-success fs-5">
+                  <i class="fas fa-clock me-2"></i>
+                  ${formatoHora(d.horaApertura)} — ${formatoHora(d.horaCierre)}
+                </span>
+              </p>
 
-            <p><strong>Especialidad:</strong> ${datos.especialidad || 'No disponible'}</p>
-            <p><strong>Descripción:</strong> ${datos.descripcion || 'No disponible'}</p>
-            
-            <!-- Días y Horario -->
-<div class="mt-4">
-  <h5 class="text-primary">
-    <i class="fas fa-calendar-week me-2"></i>Disponibilidad
-   </h5>
+              <p><strong>Días abiertos:</strong></p>
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                ${(d.diasAbierto || []).map(dia =>
+              `<span class="badge bg-primary px-3 py-2"><i class="fas fa-calendar-day me-1"></i> ${dia}</span>`
+            ).join("")}
+              </div>
 
-  <!-- Estado actual (Abierto o Cerrado) -->
-  <p>
-    <strong>Estado:</strong>
-    ${(() => {
-              if (!datos.horaApertura || !datos.horaCierre || !datos.diasAbierto) {
-                return `<span class="text-muted">No disponible</span>`;
-              }
-
-              const ahora = new Date();
-              const diaSemana = [
-                "Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"
-              ][ahora.getDay()];
-
-              // Si hoy no abre
-              if (!datos.diasAbierto.includes(diaSemana)) {
-                return `<span style="color: red; font-weight: bold;">🔴 Cerrado</span>`;
-              }
-
-              // Obtener hora actual en formato HH:MM
-              const horaActual = ahora.getHours() * 60 + ahora.getMinutes();
-
-              const [hA, mA] = datos.horaApertura.split(":").map(n => parseInt(n));
-              const [hC, mC] = datos.horaCierre.split(":").map(n => parseInt(n));
-
-              const aperturaMin = hA * 60 + mA;
-              const cierreMin = hC * 60 + mC;
-
-              // Validación de estado
-              const abierto = horaActual >= aperturaMin && horaActual <= cierreMin;
-
-              return abierto
-                ? `<span style="color: green; font-weight: bold;">🟢 Abierto ahora</span>`
-                : `<span style="color: red; font-weight: bold;">🔴 Cerrado</span>`;
-            })()}
-  </p>
-
-  <!-- Días con insignias -->
-  <p><strong>Días abiertos:</strong></p>
-  <div class="d-flex flex-wrap gap-2 mb-3">
-    ${Array.isArray(datos.diasAbierto)
-              ? datos.diasAbierto.map(dia => `
-          <span class="badge bg-primary px-3 py-2 d-flex align-items-center" style="font-size: 14px;">
-            <i class="fa-solid fa-calendar-day me-2"></i> ${dia}
-          </span>
-        `).join("")
-              : `<span class="text-muted">No disponible</span>`
-            }
-  </div>
-
-  <!-- Horario (barra verde bonita) -->
-  <p><strong>Horario:</strong></p>
-  <div class="ms-2">
-    ${datos.horaApertura && datos.horaCierre
-              ? `
-        <span class="badge bg-success px-3 py-2" style="font-size: 15px;">
-          <i class="fas fa-clock me-2"></i>
-          ${convertirHora(datos.horaApertura)} — ${convertirHora(datos.horaCierre)}
-        </span>
-      `
-              : `<span class="text-muted">No disponible</span>`
-            }
-  </div>
-</div>
-
-
-            <br> <p><strong>Monto Inicial:</strong> $${datos.montoInicial || '0'}</p>
-            
-            <h5>Redes Sociales:</h5>
-            <ul>${redesHTML}</ul>
-
-            <h5 class="mt-4">Galería:</h5>
-            <div class="row mt-3">
-              ${galeriaHTML}
+              ${d.precios ? `
+                <div class="mt-4 p-4 bg-light rounded shadow-sm">
+                  <strong class="fs-5">Rango de precios:</strong><br>
+                  <span class="fs-3 text-success fw-bold">$${d.precios.precioMin || 0} - $${d.precios.precioMax || 0}</span>
+                  ${d.precios.notaVariacion ? `<br><small class="text-muted mt-2 d-block"><strong>Nota:</strong> ${d.precios.notaVariacion}</small>` : ""}
+                </div>` : ""}
             </div>
-          `;
-        }
-      }).catch(error => {
-        console.error("Error al obtener el negocio:", error);
-        div.innerHTML = "<p>Ocurrió un error al cargar el perfil.</p>";
+
+            <div class="col-md-6">
+              ${redesHTML ? `<div class="mt-3"><strong>Redes sociales:</strong><br><div class="d-flex flex-wrap gap-3 mt-2">${redesHTML}</div></div>` : ""}
+            </div>
+          </div>
+
+          <hr class="my-5">
+
+          <h4 class="text-primary mb-4 text-center">
+            <i class="fas fa-concierge-bell me-2"></i>Nuestros Servicios
+          </h4>
+
+          <div class="row justify-content-center">
+            <div class="col-lg-10">
+              ${especialidadesHTML || "<p class='text-muted text-center'>No hay servicios registrados aún.</p>"}
+            </div>
+          </div>
+        `;
+
+      }).catch(err => {
+        console.error("Error cargando negocio:", err);
+        div.innerHTML = "<p class='text-danger text-center'>Error al cargar el perfil.</p>";
       });
     }
 
-    // Función para editar
-    window.editarDatos = async function () {
-      if (!usuario || !negocioId) return;
-      const negocioRef = doc(db, "usuarios", usuario, "negocios", negocioId);
-      const docSnap = await getDoc(negocioRef);
-
-      if (docSnap.exists()) {
-        const datos = docSnap.data();
-        localStorage.setItem("datosProveedor", JSON.stringify(datos));
-        localStorage.setItem("modoEdicion", "true");
-        localStorage.setItem("negocioId", negocioId);
+    // BOTÓN EDITAR PERFIL → Usa el ID real guardado
+    window.editarPerfil = function () {
+      const idReal = localStorage.getItem("negocioEnEdicion");
+      if (idReal) {
+        console.log("Editando negocio con ID:", idReal); // Para depurar
         window.location.href = "editarNegocio.html";
+      } else {
+        Swal.fire("Error", "No se pudo abrir el editor. Intenta de nuevo.", "error");
       }
     };
+
   </script>
 </head>
 
-<body>
-
+<body class="bg-light">
   <div class="container py-5">
+    <div id="contenidoProveedor" class="bg-white p-5 rounded shadow-lg"></div>
 
-    <div id="contenidoProveedor" class="mt-2"></div>
-
-
-    <div class="d-flex justify-content-end mb-3 gap-2">
-      <button class="btn btn-secondary" onclick="window.location.href='misNegocios.html'">Regresar</button>
-      <button class="btn btn-primary" onclick="editarDatos()">Editar Perfil</button>
+    <div class="text-end mt-4">
+      <button class="btn btn-secondary btn-lg me-3" onclick="window.location.href='misNegocios.html'">
+        Regresar
+      </button>
+      <button class="btn btn-primary btn-lg" onclick="editarPerfil()">
+        Editar Perfil
+      </button>
     </div>
   </div>
 </body>

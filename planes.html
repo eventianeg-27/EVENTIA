@@ -47,7 +47,7 @@
         <i class="bi bi-award-fill icon-plan"></i>
         <h3>Plan Premium</h3>
         <p>✔ Registrar <strong>3 negocios</strong></p>
-        <p>✔ Hasta <strong>5  servicios</strong></p>
+        <p>✔ Hasta <strong>5 servicios</strong></p>
         <p>✔ Aparición en <strong>carrusel principal</strong></p>
         <div class="btn-seleccionar" onclick="elegirPlan('premium')">SELECCIONAR</div>
       </div>
@@ -195,12 +195,44 @@
         // SI ES EL PLAN ACTUAL → DESACTIVAR Y MARCAR
         // ==========================
         if (plan === planActual) {
-          card.textContent = "PLAN SELECCIONADO";
-          card.style.background = "#9e9e9e";
-          card.style.pointerEvents = "none";
-          planBox.style.opacity = "0.6";
+          const registroCompleto = localStorage.getItem("registroCompleto") === "true";
+
+          if (registroCompleto) {
+            // 🔴 REGISTRO TERMINADO → NO PUEDE CAMBIAR ESTE PLAN
+            card.textContent = "PLAN SELECCIONADO";
+            card.style.background = "#9e9e9e";
+            card.style.pointerEvents = "none";
+            planBox.style.opacity = "0.6";
+          } else {
+            // 🟢 EN REGISTRO → PUEDE EDITAR/ CAMBIAR
+            card.textContent = "PLAN SELECCIONADO (SEGUIR EDITANDO)";
+            card.style.background = "#4caf50";
+            card.style.pointerEvents = "auto"; // ✔ puede pulsarlo
+            planBox.style.opacity = "1";
+          }
+
           return;
         }
+
+
+        const registroCompleto = localStorage.getItem("registroCompleto") === "true";
+
+        if (registroCompleto) {
+          // Si ya terminó, bloquear planes inferiores o iguales
+          if (nivel[plan] <= nivel[planActual]) {
+            card.textContent = nivel[plan] === nivel[planActual]
+              ? "PLAN SELECCIONADO"
+              : "NO DISPONIBLE";
+
+            card.style.background = "#9e9e9e";
+            card.style.pointerEvents = "none";
+            planBox.style.opacity = "0.6";
+          }
+        }
+
+
+
+
 
         // ==========================
         // SI EL PLAN NO ALCANZA PARA SUS NEGOCIOS → BLOQUEO VISUAL
@@ -229,6 +261,22 @@
     // Ejecutar UI al cargar la página
     actualizarUIPlanes();
     window.actualizarUIPlanes = actualizarUIPlanes;
+
+
+    document.addEventListener("click", (e) => {
+      if (e.target.textContent.includes("SEGUIR EDITANDO")) {
+        // Recuperar último negocio que el usuario estuvo editando
+        const negocioId = localStorage.getItem("negocioEnEdicion");
+
+        if (negocioId) {
+          console.log("Volviendo a editar negocio:", negocioId);
+          window.location.href = "negoregistro.html";
+        } else {
+          console.warn("⚠ No se encontró negocioEnEdicion");
+        }
+      }
+    });
+
 
   </script>
 

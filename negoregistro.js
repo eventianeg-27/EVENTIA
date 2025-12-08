@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import {
-  getFirestore, doc, setDoc
+  getFirestore, doc, setDoc, getDoc,        // 🔥 NECESARIO
+  collection
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 // ⭐⭐⭐ AGREGA AQUÍ la función global SweetAlert ⭐⭐⭐
@@ -43,6 +44,19 @@ if (planTexto) {
     planElemento.textContent = `Plan elegido: ${planTexto}`;
   }
 }
+
+
+// 🔥 Si el usuario viene de SEGUIR EDITANDO, NO borrar el negocioEnEdicion
+const negocioEnEdicion = localStorage.getItem("negocioEnEdicion");
+
+// Si ya existe negocio en edición, lo mantenemos para que cargue los datos
+if (negocioEnEdicion) {
+  console.log("Manteniendo negocio en edición:", negocioEnEdicion);
+} else {
+  // Si NO existe, es un nuevo registro → limpiar
+  localStorage.removeItem("negocioEnEdicion");
+}
+
 
 
 // Establecer proveedorId si no existe pero nombreUsuario sí
@@ -88,19 +102,108 @@ const btnAgregarServicio = document.getElementById("btnAgregarEspecialidad");
 //  AJUSTAR LÍMITE SEGÚN EL PLAN
 // -------------------
 
-document.addEventListener("DOMContentLoaded", () => {
-  const plan = localStorage.getItem("planTexto") || "";
+document.addEventListener("DOMContentLoaded", async () => {
 
-  if (plan.includes("Gratis")) {
-    MAX_SERVICIOS = 1;
-  } else if (plan.includes("Plus")) {
-    MAX_SERVICIOS = 3; // AHORA PLUS SOLO PERMITE 3
-  } else if (plan.includes("Premium")) {
-    MAX_SERVICIOS = 5; // Premium sigue permitiendo 5
+  // ======================================
+  // 🔥 Cargar negocio en edición
+  // ======================================
+  const proveedorId = localStorage.getItem("proveedorId");
+  const negocioEnEdicion = localStorage.getItem("negocioEnEdicion");
+
+  if (proveedorId && negocioEnEdicion) {
+    try {
+      const negocioRef = doc(db, "usuarios", proveedorId, "negocios", negocioEnEdicion);
+      const snap = await getDoc(negocioRef);
+
+      if (snap.exists()) {
+        const data = snap.data();
+
+        // Rellenar datos
+        document.getElementById("negocio").value = data.negocio || "";
+        document.getElementById("telefono").value = data.telefono || "";
+        document.getElementById("ubicacion").value = data.ubicacion || "";
+
+        if (data.urlImagen) {
+          const preview = document.getElementById("previewImagen");
+          preview.src = data.urlImagen;
+          preview.style.display = "block";
+          imagenPerfilUrl = data.urlImagen;
+        }
+
+        if (data.urlFachada) {
+          const preview = document.getElementById("previewFachada");
+          preview.src = data.urlFachada;
+          preview.style.display = "block";
+          imagenFachadaUrl = data.urlFachada;
+        }
+
+        // Horarios
+        document.getElementById("horaApertura").value = data.horaApertura || "";
+        document.getElementById("horaCierre").value = data.horaCierre || "";
+
+        // Días
+        const diasIds = {
+          "Lunes": "diaLunes",
+          "Martes": "diaMartes",
+          "Miércoles": "diaMiercoles",
+          "Jueves": "diaJueves",
+          "Viernes": "diaViernes",
+          "Sábado": "diaSabado",
+          "Domingo": "diaDomingo"
+        };
+        (data.diasAbierto || []).forEach(d => {
+          if (diasIds[d]) document.getElementById(diasIds[d]).checked = true;
+        });
+
+        // Redes sociales
+        if (data.redesSociales) {
+          data.redesSociales.forEach(red => {
+            document.getElementById(red).checked = true;
+
+            const input = document.getElementById(`usuario-${red}`);
+            if (input && data.usuariosRedes?.[red]) {
+              input.value = data.usuariosRedes[red];
+            }
+          });
+        }
+
+        // Precios
+        document.getElementById("precioMin").value = data.precios?.precioMin || "";
+        document.getElementById("precioMax").value = data.precios?.precioMax || "";
+        document.getElementById("notaPrecio").value = data.precios?.notaVariacion || "";
+
+        // Referencias
+        document.getElementById("referencias").value = data.referenciaUbicacion || "";
+
+        // 🔥 Reconstruir servicios
+        serviciosContainer.innerHTML = "";
+        serviciosState = [];
+
+        (data.especialidades || []).forEach(esp => {
+          agregarTarjetaEspecialidad(true, {
+            nombre: esp.nombre,
+            descripcion: esp.descripcion,
+            archivos: esp.galeria || []
+          });
+        });
+      }
+
+    } catch (err) {
+      console.error("Error al reconstruir negocio:", err);
+    }
   }
 
+  // ======================================
+  // 🔥 Ajustar límite según plan
+  // ======================================
+  localStorage.setItem("registroCompleto", "false");
 
-  // Agregar tarjeta inicial
+  const plan = localStorage.getItem("planTexto") || "";
+
+  if (plan.includes("Gratis")) MAX_SERVICIOS = 1;
+  else if (plan.includes("Plus")) MAX_SERVICIOS = 3;
+  else if (plan.includes("Premium")) MAX_SERVICIOS = 5;
+
   if (serviciosState.length === 0) {
     agregarTarjetaEspecialidad();
   }
@@ -111,7 +214,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (textoMax) {
     textoMax.textContent = `Máximo ${MAX_SERVICIOS} servicios.`;
   }
+
 });
+
 
 
 function agregarTarjetaEspecialidad(fromRebuild = false, data = null) {
@@ -134,10 +239,10 @@ function agregarTarjetaEspecialidad(fromRebuild = false, data = null) {
     return;
   }
 
-
-
-
   const index = serviciosState.length;
+
+
+
 
   // Si es reconstrucción, cargar datos previos
   if (fromRebuild && data) {
@@ -280,10 +385,30 @@ function renderEvidenciasTarjeta(index) {
     const wrapper = document.createElement("div");
     wrapper.style.position = "relative";
 
-    const elemento = document.createElement(file.type.startsWith("image/") ? "img" : "video");
+    const elemento = document.createElement(
+      typeof file === "string"
+        ? (file.match(/\.(mp4|mov|avi|mkv|webm)$/i) ? "video" : "img")
+        : (file.type.startsWith("image/") ? "img" : "video")
+    );
+
     elemento.className = "evidencia-thumb";
-    elemento.src = URL.createObjectURL(file);
-    if (file.type.startsWith("video/")) elemento.controls = true;
+
+    // ⭐ Si el archivo es una URL (edición previa)
+    if (typeof file === "string") {
+      elemento.src = file;  // URL directa
+    } else {
+      elemento.src = URL.createObjectURL(file); // File Object nuevo
+    }
+
+    // Si es video
+    if (typeof file === "string") {
+      if (file.match(/\.(mp4|mov|avi|mkv|webm)$/i)) {
+        elemento.controls = true;
+      }
+    } else if (file.type.startsWith("video/")) {
+      elemento.controls = true;
+    }
+
 
     const btnRemove = document.createElement("button");
     btnRemove.className = "btn btn-sm btn-danger btn-remove-evid";
@@ -337,6 +462,9 @@ btnAgregarEspecialidad.addEventListener("click", () => {
     const plan = localStorage.getItem("planTexto") || "";
 
     if (MAX_SERVICIOS === 1) {
+      // Guardar el negocio que se estaba editando antes de salir a planes
+      localStorage.setItem("negocioEnEdicion", negocioEnEdicion);
+
       // PLAN GRATIS
       mostrarAlerta(
         "Límite alcanzado",
@@ -347,6 +475,9 @@ btnAgregarEspecialidad.addEventListener("click", () => {
 
 
     } else if (MAX_SERVICIOS === 3) {
+      // Guardar el negocio que se estaba editando antes de salir a planes
+      localStorage.setItem("negocioEnEdicion", negocioEnEdicion);
+
       // PLAN PLUS -> ALERTA DE SUBIR A PREMIUM
       mostrarAlerta(
         "¡Límite del plan Plus!",
@@ -356,6 +487,9 @@ btnAgregarEspecialidad.addEventListener("click", () => {
       );
 
     } else if (MAX_SERVICIOS === 5) {
+      // Guardar el negocio que se estaba editando antes de salir a planes
+      localStorage.setItem("negocioEnEdicion", negocioEnEdicion);
+
       // PLAN PREMIUM
       mostrarAlerta(
         "Límite alcanzado",
@@ -589,6 +723,7 @@ document.getElementById("btnRegistro").addEventListener("click", async () => {
     usuarioLogueado.esProveedor = true;
     localStorage.setItem("usuarioLogueado", JSON.stringify(usuarioLogueado));
 
+    localStorage.setItem("registroCompleto", "true");
 
 
     // También actualizar localStorage inmediatamente

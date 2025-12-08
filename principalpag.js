@@ -144,6 +144,7 @@ if (cerrarSesionBtn) {
   });
 }
 
+
 // ==========================
 // VALIDAR PLAN Y CANTIDAD DE NEGOCIOS
 // ==========================
@@ -153,53 +154,61 @@ if (btnRegistroNegocio) {
   btnRegistroNegocio.addEventListener("click", async () => {
 
     const usuarioLogueado = JSON.parse(localStorage.getItem("usuarioLogueado") || "{}");
-    const plan = (localStorage.getItem("planTexto") || "Básico").toLowerCase();
+    const planTexto = localStorage.getItem("planTexto"); // 📌 Aquí detectamos si NO ha elegido plan
 
+    // 1️⃣ Si NO hay sesión → enviar a iniciar sesión
     if (!usuarioLogueado.correo) {
-      alert("Debes iniciar sesión para registrar un negocio.");
+      window.location.href = "iniciaRegis.html";
       return;
     }
 
-    // Leer negocios del usuario
+    // 2️⃣ Si NO ha elegido un plan → enviar a planes.html
+    if (!planTexto) {
+      Swal.fire({
+        icon: "info",
+        title: "Elige un plan",
+        text: "Debes seleccionar un plan antes de registrar negocios.",
+        confirmButtonColor: "#3085d6"
+      }).then(() => {
+        window.location.href = "planes.html";
+      });
+      return;
+    }
+
+    // Plan del usuario
+    const plan = planTexto.toLowerCase();
+
+    // 3️⃣ Contamos negocios existentes
     const negociosRef = collection(db, "usuarios", usuarioLogueado.correo, "negocios");
     const negociosSnap = await getDocs(negociosRef);
     const cantidad = negociosSnap.size;
 
-    // 🔥 PLAN BÁSICO → SOLO 1 NEGOCIO
-    if (plan === "Básico") {
+    // 4️⃣ Límites según plan
+    let limite = 1;
+    if (plan === "plus") limite = 2;
+    if (plan === "premium") limite = 3;
 
-      if (cantidad === 0) {
-        // primer negocio
-        window.location.href = "negoregistro.html";
-      } else {
-        alert("Tu plan Básico solo permite registrar 1 negocio. Mejora tu plan para agregar más.");
-        window.location.href = "planes.html";
-      }
-
+    // Usuario puede agregar negocio
+    if (cantidad < limite) {
+      window.location.href = "negoregistro.html"; // Puede registrar
       return;
     }
 
-    // 🔥 PLAN PLUS → hasta 2 negocios
-    if (plan === "plus") {
-      if (cantidad < 2) {
-        window.location.href = "negoregistro.html";
-      } else {
-        alert("Tu plan Premium permite máximo 2 negocios. Mejora tu plan para agregar más.");
-        window.location.href = "planes.html";
-      }
-      return;
-    }
+    // ❌ Límite alcanzado → Mostrar alerta
+    Swal.fire({
+      icon: "error",
+      title: "Límite alcanzado",
+      html: `
+        Tu plan <strong>${planTexto}</strong> permite un máximo de 
+        <strong>${limite} negocio(s)</strong>.<br><br>
+        Para agregar más negocios, mejora tu plan.
+      `,
+      confirmButtonText: "Ver planes",
+      confirmButtonColor: "#d33",
+    }).then(() => {
+      window.location.href = "planes.html";
+    });
 
-    // 🔥 PLAN PREMIUM
-    if (plan === "premium") {
-      if (cantidad < 2) {
-        window.location.href = "negoregistro.html";
-      } else {
-        alert("Tu plan Premium permite máximo 3 negocios.");
-        window.location.href = "planes.html";
-      }
-      return;
-    }
   });
 }
 
