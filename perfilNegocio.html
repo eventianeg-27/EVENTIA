@@ -9,11 +9,9 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
-
     const firebaseConfig = {
       apiKey: "AIzaSyBhX59jBh2tUkEnEGcb9sFVyW2zJe9NB_w",
       authDomain: "eventia-9ead3.firebaseapp.com",
@@ -23,20 +21,16 @@
       appId: "1:313661648136:web:1c9eb73bbb3f78994c90bd",
       measurementId: "G-RDLNL394MH"
     };
-
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-
     const div = document.getElementById("contenidoProveedor");
     const usuarioLogueado = JSON.parse(localStorage.getItem("usuarioLogueado") || "{}");
     const proveedorId = (usuarioLogueado.correo || "").trim().toLowerCase();
     const negocioId = localStorage.getItem("negocioId")?.trim();
-
     if (!proveedorId || !negocioId) {
       div.innerHTML = "<p class='text-danger text-center'>Error: No se encontraron datos del usuario o negocio.</p>";
     } else {
       const negocioRef = doc(db, "usuarios", proveedorId, "negocios", negocioId);
-
       function formatoHora(hora) {
         if (!hora) return "No definido";
         const [h, m] = hora.split(":").map(Number);
@@ -44,38 +38,30 @@
         const hora12 = h % 12 || 12;
         return `${hora12}:${m.toString().padStart(2, "0")} ${periodo}`;
       }
-
       function estaAbiertoAhora(datos) {
         if (!datos.diasAbierto || !datos.horaApertura || !datos.horaCierre) return false;
-
         const dias = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
         const hoy = dias[new Date().getDay()];
         if (!datos.diasAbierto.includes(hoy)) return false;
-
         const ahora = new Date();
         const minutosActual = ahora.getHours() * 60 + ahora.getMinutes();
         const [ha, ma] = datos.horaApertura.split(":").map(Number);
         const [hc, mc] = datos.horaCierre.split(":").map(Number);
         const apertura = ha * 60 + ma;
         const cierre = hc * 60 + mc;
-
         return apertura < cierre
           ? minutosActual >= apertura && minutosActual < cierre
           : minutosActual >= apertura || minutosActual < cierre;
       }
-
       getDoc(negocioRef).then(snap => {
         if (!snap.exists()) {
           div.innerHTML = "<p class='text-danger text-center'>No se encontró el negocio.</p>";
           return;
         }
-
         const d = snap.data();
         const negocioIdReal = snap.id; // ← ESTE ES EL ID CORRECTO 100% DEL DOCUMENTO
-
         // GUARDAMOS EL ID REAL PARA USARLO AL EDITAR
         localStorage.setItem("negocioEnEdicion", negocioIdReal);
-
         // Generar galería por especialidad
         const especialidadesHTML = (d.especialidades || []).map((esp, i) => {
           const galeria = (esp.galeria || []).map(url => {
@@ -83,14 +69,13 @@
             return `
               <div class="col-6 col-md-4 col-lg-3 mb-3">
                 ${esVideo
-                ? `<video src="${url}" controls class="img-fluid rounded shadow-sm" style="height: 180px; object-fit: cover; width: 100%;"></video>`
-                : `<img src="${url}" class="img-fluid rounded shadow-sm" style="height: 180px; object-fit: cover;">`
+                ? `<video src="${url}" controls class="img-fluid rounded shadow-sm animate-fade-in" style="height: 180px; object-fit: cover; width: 100%;"></video>`
+                : `<img src="${url}" class="img-fluid rounded shadow-sm animate-fade-in" style="height: 180px; object-fit: cover;">`
               }
               </div>`;
           }).join("");
-
           return `
-            <div class="card mb-4 shadow-sm">
+            <div class="card mb-4 shadow-sm animate-slide-up">
               <div class="card-body">
                 <h5 class="card-title text-primary"><i class="fas fa-star me-2"></i>${esp.nombre || "Servicio sin nombre"}</h5>
                 <p class="card-text">${esp.descripcion || "Sin descripción"}</p>
@@ -98,95 +83,128 @@
               </div>
             </div>`;
         }).join("");
-
         const redesHTML = (d.redesSociales || []).map(red => {
           const usuario = d.usuariosRedes?.[red] || "";
           const icono = red === "facebook" ? "fab fa-facebook" : red === "instagram" ? "fab fa-instagram" : "fas fa-link";
           const enlace = usuario ? (red === "otro" ? usuario : `https://${red}.com/${usuario.replace("@", "")}`) : "#";
           return `
-            <a href="${enlace}" target="_blank" class="me-3 text-decoration-none text-primary">
+            <a href="${enlace}" target="_blank" class="me-3 text-decoration-none text-primary social-link">
               <i class="${icono} fa-lg"></i> ${usuario || red}
             </a>`;
         }).join("");
-
         const abiertoAhora = estaAbiertoAhora(d);
-
         div.innerHTML = `
-          <div class="text-center mb-4">
-            <img src="${d.urlImagen || 'default.jpg'}" alt="Logo" class="rounded-circle shadow" style="width: 120px; height: 120px; object-fit: cover;">
-            <h3 class="nombre-negocio mt-3">${d.negocio || "Negocio sin nombre"}</h3>
-            <p>
-              ${abiertoAhora
-            ? '<span class="badge bg-success fs-5 px-4 py-2">Abierto ahora</span>'
-            : '<span class="badge bg-danger fs-5 px-4 py-2">Cerrado</span>'
-          }
-            </p>
-          </div>
+          
 
-          ${d.urlFachada ? `
-            <div class="text-center mb-4">
-              <img src="${d.urlFachada}" alt="Fachada" class="img-fluid rounded shadow" style="max-height: 300px;">
-              <p class="text-primary fw-bold fs-5 mt-2">
-                <i class="fas fa-store me-2"></i> Fachada del negocio
-              </p>
-            </div>` : ''}
 
-          <div class="row">
-            <div class="col-md-6">
-              <p><strong>Teléfono:</strong> ${d.telefono || "No disponible"}</p>
-              <p><strong>Ubicación:</strong> 
-                ${d.ubicacionLink
+
+        <div class="row align-items-start">
+  
+  <!-- ===============================
+       COLUMNA IZQUIERDA 
+       =============================== -->
+  <div class="col-md-6">
+
+    <div class="text-center mb-4 animate-fade-in">
+      <img src="${d.urlImagen || 'default.jpg'}" 
+           alt="Logo" 
+           class="rounded-circle shadow profile-img"
+           style="width: 120px; height: 120px; object-fit: cover;">
+      
+      <h3 class="nombre-negocio mt-3">${d.negocio || "Negocio sin nombre"}</h3>
+
+      <p>
+        ${abiertoAhora
+            ? '<span class="badge bg-success fs-5 px-4 py-2 animate-pulse">Abierto ahora</span>'
+            : '<span class="badge bg-danger fs-5 px-4 py-2 animate-pulse">Cerrado</span>'}
+      </p>
+    </div>
+
+    ${d.urlFachada ? `
+  <div class="text-center mb-4 animate-slide-up">
+    <img src="${d.urlFachada}" 
+         alt="Fachada" 
+         class="img-fluid rounded shadow facade-img" 
+         style="max-height: 300px;">
+    <p class="text-primary fw-bold fs-5 mt-2">
+      <i class="fas fa-store me-2"></i> Fachada del negocio
+    </p>
+  </div>` : ''}
+
+${redesHTML ? `
+  <div class="info-card p-3 rounded shadow-sm text-start mt-3">
+    <strong><i class="fas fa-share-alt me-2"></i>Redes sociales:</strong>
+    <div class="d-flex flex-wrap gap-3 mt-2 justify-content-start">
+      ${redesHTML}
+    </div>
+  </div>` : ""}
+
+
+  </div>
+
+  <!-- ===============================
+       COLUMNA DERECHA 
+       =============================== -->
+  <div class="col-md-6">
+
+    <div class="info-card p-3 mb-3 rounded shadow-sm">
+      <p><strong><i class="fas fa-phone me-2"></i>Teléfono:</strong> ${d.telefono || "No disponible"}</p>
+    </div>
+
+    <div class="info-card p-3 mb-3 rounded shadow-sm">
+      <p><strong><i class="fas fa-map-marker-alt me-2"></i>Ubicación:</strong>
+        ${d.ubicacionLink
             ? `<a href="${d.ubicacionLink}" target="_blank" class="text-primary">${d.ubicacion}</a>`
             : d.ubicacion || "No disponible"}
-              </p>
-              ${d.referenciaUbicacion ? `<p><strong>Referencia:</strong> ${d.referenciaUbicacion}</p>` : ""}
-              
-              <p><strong>Horario:</strong><br>
-                <span class="badge bg-success fs-5">
-                  <i class="fas fa-clock me-2"></i>
-                  ${formatoHora(d.horaApertura)} — ${formatoHora(d.horaCierre)}
-                </span>
-              </p>
+      </p>
+      ${d.referenciaUbicacion ? `
+        <p><strong><i class="fas fa-directions me-2"></i>Referencia:</strong> ${d.referenciaUbicacion}</p>` : ""}
+    </div>
 
-              <p><strong>Días abiertos:</strong></p>
-              <div class="d-flex flex-wrap gap-2 mb-3">
-                ${(d.diasAbierto || []).map(dia =>
-              `<span class="badge bg-primary px-3 py-2"><i class="fas fa-calendar-day me-1"></i> ${dia}</span>`
+    <div class="info-card p-3 mb-3 rounded shadow-sm">
+      <p><strong><i class="fas fa-clock me-2"></i>Horario:</strong></p>
+      <span class="badge bg-success fs-5 horario-box">
+        ${formatoHora(d.horaApertura)} — ${formatoHora(d.horaCierre)}
+      </span>
+    </div>
+
+    <div class="info-card p-3 mb-3 rounded shadow-sm">
+      <p><strong><i class="fas fa-calendar-days me-2"></i>Días abiertos:</strong></p>
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        ${(d.diasAbierto || []).map(dia =>
+              `<span class="badge bg-primary px-3 py-2 dia-abierto">${dia}</span>`
             ).join("")}
-              </div>
+      </div>
+    </div>
 
-              ${d.precios ? `
-                <div class="mt-4 p-4 bg-light rounded shadow-sm">
-                  <strong class="fs-5">Rango de precios:</strong><br>
-                  <span class="fs-3 text-success fw-bold">$${d.precios.precioMin || 0} - $${d.precios.precioMax || 0}</span>
-                  ${d.precios.notaVariacion ? `<br><small class="text-muted mt-2 d-block"><strong>Nota:</strong> ${d.precios.notaVariacion}</small>` : ""}
-                </div>` : ""}
-            </div>
+    ${d.precios ? `
+      <div class="info-card p-4 mb-3 rounded shadow-sm bg-light">
+        <strong class="fs-5"><i class="fas fa-dollar-sign me-2"></i>Rango de precios:</strong><br>
+        <span class="fs-3 text-success fw-bold">$${d.precios.precioMin || 0} - $${d.precios.precioMax || 0}</span>
+        ${d.precios.notaVariacion ? `
+          <br><small class="text-muted mt-2 d-block">
+          <strong>Nota:</strong> ${d.precios.notaVariacion}</small>` : ""}
+      </div>` : ""}
+  </div>
 
-            <div class="col-md-6">
-              ${redesHTML ? `<div class="mt-3"><strong>Redes sociales:</strong><br><div class="d-flex flex-wrap gap-3 mt-2">${redesHTML}</div></div>` : ""}
+</div>
             </div>
           </div>
-
           <hr class="my-5">
-
-          <h4 class="text-primary mb-4 text-center">
+          <h4 class="text-primary mb-4 text-center titulo-servicios animate-fade-in">
             <i class="fas fa-concierge-bell me-2"></i>Nuestros Servicios
           </h4>
-
           <div class="row justify-content-center">
             <div class="col-lg-10">
               ${especialidadesHTML || "<p class='text-muted text-center'>No hay servicios registrados aún.</p>"}
             </div>
           </div>
         `;
-
       }).catch(err => {
         console.error("Error cargando negocio:", err);
         div.innerHTML = "<p class='text-danger text-center'>Error al cargar el perfil.</p>";
       });
     }
-
     // BOTÓN EDITAR PERFIL → Usa el ID real guardado
     window.editarPerfil = function () {
       const idReal = localStorage.getItem("negocioEnEdicion");
@@ -197,14 +215,12 @@
         Swal.fire("Error", "No se pudo abrir el editor. Intenta de nuevo.", "error");
       }
     };
-
   </script>
 </head>
 
 <body class="bg-light">
   <div class="container py-5">
     <div id="contenidoProveedor" class="bg-white p-5 rounded shadow-lg"></div>
-
     <div class="text-end mt-4">
       <button class="btn btn-secondary btn-lg me-3" onclick="window.location.href='misNegocios.html'">
         Regresar

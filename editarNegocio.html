@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -9,6 +10,7 @@
   <link rel="stylesheet" href="negoregistro.css" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+
 <body class="bg-light">
   <div class="container py-5">
     <h2 class="text-center mb-4 text-primary">Editar Información del Negocio</h2>
@@ -32,7 +34,8 @@
         <hr class="my-4">
         <h5 class="text-primary"><i class="fas fa-map-marker-alt me-2"></i>Ubicación</h5>
         <div class="input-group mb-3">
-          <input type="text" class="form-control" id="ubicacion" placeholder="Ej: Av. Principal 123, Col. Centro" required />
+          <input type="text" class="form-control" id="ubicacion" placeholder="Ej: Av. Principal 123, Col. Centro"
+            required />
           <button class="btn btn-outline-success" type="button" id="verEnMapa">Ver en Maps</button>
         </div>
         <small id="mapLinkText" class="text-muted" style="display:none;">
@@ -50,51 +53,93 @@
         <!-- Referencia -->
         <hr class="my-4">
         <h5 class="text-primary"><i class="fas fa-directions me-2"></i>Referencia de ubicación</h5>
-        <textarea class="form-control mb-3" id="referencias" rows="3" placeholder="Ej: Frente a la iglesia, a un lado de la farmacia..."></textarea>
+        <textarea class="form-control mb-3" id="referencias" rows="3"
+          placeholder="Ej: Frente a la iglesia, a un lado de la farmacia..."></textarea>
 
         <!-- Horario y días -->
         <hr class="my-4">
+        <!-- DISPONIBILIDAD (DISEÑO IGUAL A negoregistro.html) -->
+        <hr class="my-4">
         <h5 class="text-primary"><i class="fas fa-clock me-2"></i>Disponibilidad</h5>
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <label>Hora de apertura</label>
-            <input type="time" class="form-control" id="horaApertura" required />
+
+        <div class="disponibilidad-box p-3 mb-3">
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Hora de apertura</label>
+              <input type="time" class="form-control" id="horaApertura" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Hora de cierre</label>
+              <input type="time" class="form-control" id="horaCierre" required />
+            </div>
           </div>
-          <div class="col-md-6">
-            <label>Hora de cierre</label>
-            <input type="time" class="form-control" id="horaCierre" required />
+
+          <label class="form-label fw-bold">Días disponibles</label>
+
+          <div class="dias-grid mt-2">
+
+            <label class="dia-item">
+              <input type="checkbox" id="diaLunes" value="Lunes"> Lunes
+            </label>
+
+            <label class="dia-item">
+              <input type="checkbox" id="diaMartes" value="Martes"> Martes
+            </label>
+
+            <label class="dia-item">
+              <input type="checkbox" id="diaMiercoles" value="Miércoles"> Miércoles
+            </label>
+
+            <label class="dia-item">
+              <input type="checkbox" id="diaJueves" value="Jueves"> Jueves
+            </label>
+
+            <label class="dia-item">
+              <input type="checkbox" id="diaViernes" value="Viernes"> Viernes
+            </label>
+
+            <label class="dia-item">
+              <input type="checkbox" id="diaSabado" value="Sábado"> Sábado
+            </label>
+
+            <label class="dia-item">
+              <input type="checkbox" id="diaDomingo" value="Domingo"> Domingo
+            </label>
+
           </div>
+
+
         </div>
 
-        <label class="form-label">Días que abre</label>
-        <div class="row">
-          ${["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"].map(dia => `
-            <div class="col-6 col-md-4 mb-2">
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="${dia}" id="dia${dia}">
-                <label class="form-check-label" for="dia${dia}">${dia}</label>
-              </div>
-            </div>
-          `).join("")}
-        </div>
 
         <!-- Precios -->
         <hr class="my-4">
-        <h5 class="text-success"><i class="fas fa-dollar-sign me-2"></i>Rango de precios</h5>
-        <div class="row">
-          <div class="col-md-4 mb-3">
-            <label>Precio mínimo</label>
-            <input type="number" class="form-control" id="precioMin" placeholder="Ej: 5000" />
+
+        <h5 class="text-success fw-bold">
+          <i class="fas fa-dollar-sign me-2"></i>
+          Cantidad estimada para que el cliente reserve
+        </h5>
+
+        <label class="form-label fw-semibold mt-3">Rango de precios (MXN):</label>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <input type="number" class="form-control" id="precioMin" placeholder="Mínimo ej. 500">
           </div>
-          <div class="col-md-4 mb-3">
-            <label>Precio máximo</label>
-            <input type="number" class="form-control" id="precioMax" placeholder="Ej: 20000" />
-          </div>
-          <div class="col-md-4 mb-3">
-            <label>Nota (opcional)</label>
-            <input type="text" class="form-control" id="notaPrecio" placeholder="Ej: Depende del paquete" />
+
+          <div class="col-md-6">
+            <input type="number" class="form-control" id="precioMax" placeholder="Máximo ej. 1500">
           </div>
         </div>
+
+        <label class="form-label fw-semibold mt-4">Agregue una nota de su variación de precios:</label>
+
+        <textarea class="form-control" id="notaPrecio" rows="2"
+          placeholder="Ej. El costo puede variar según el tipo de paquete o combinación elegida."></textarea>
+
+        <small class="text-muted">Máximo 120 caracteres</small>
+
 
         <!-- Redes sociales -->
         <hr class="my-4">
@@ -118,7 +163,8 @@
         <h5 class="text-primary"><i class="fas fa-image me-2"></i>Foto de perfil (logo)</h5>
         <input type="file" class="form-control mb-3" id="fotoPerfil" accept="image/*" />
         <div class="text-center">
-          <img id="previewImagen" class="rounded-circle shadow" style="width:150px; height:150px; object-fit:cover; display:none;" />
+          <img id="previewImagen" class="rounded-circle shadow"
+            style="width:150px; height:150px; object-fit:cover; display:none;" />
         </div>
 
         <!-- Especialidades -->
@@ -141,4 +187,5 @@
 
   <script type="module" src="editarNegocio.js"></script>
 </body>
+
 </html>

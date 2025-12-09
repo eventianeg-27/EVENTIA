@@ -188,16 +188,140 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // === RESTO DE FUNCIONES (especialidades, guardar, etc.) ===
 function agregarTarjetaEspecialidad(fromRebuild = false, data = null) {
-  if (serviciosState.length >= MAX_SERVICIOS && !fromRebuild) {
+
+  // Validación del límite SOLO si el usuario agrega manualmente
+  if (!fromRebuild && serviciosState.length >= MAX_SERVICIOS) {
     mostrarAlerta("Límite", `Tu plan permite máximo ${MAX_SERVICIOS} servicios`, "warning");
     return;
   }
-  // ... (tu código de agregarTarjetaEspecialidad, igual que antes)
-  // (lo tienes bien, no lo repito por espacio)
+
+  const index = serviciosState.length;
+
+  serviciosState.push({
+    nombre: data?.nombre || "",
+    descripcion: data?.descripcion || "",
+    archivos: data?.archivos || []
+  });
+
+  const card = document.createElement("div");
+  card.className = "card p-3 shadow-sm mb-3";
+  card.id = `servicio-${index}`;
+
+  card.innerHTML = `
+    <div class="d-flex justify-content-between">
+      <h5 class="fw-bold">Servicio ${index + 1}</h5>
+      <span class="badge text-bg-secondary">#${index + 1}</span>
+    </div>
+
+    <div class="mb-2">
+      <select class="form-select select-servicio mb-2" id="select-servicio-${index}" data-index="${index}">
+        <option value="">Seleccione una</option>
+        <option>Fotografía y Video</option>
+        <option>Decoración y Ambientación</option>
+        <option>Renta de Mobiliario</option>
+        <option>Música y Entretenimiento</option>
+        <option>Banquete y Bebidas</option>
+      </select>
+      
+    </div>
+
+    <textarea class="form-control mt-3" id="descripcion-servicio-${index}" rows="2"
+      placeholder="Descripción breve del servicio"></textarea>
+
+    <button type="button" class="btn btn-outline-primary w-100 mt-3" id="btn-archivos-${index}">
+      <i class="fas fa-paperclip"></i> Subir fotos / videos
+    </button>
+
+    <small class="text-muted">Hasta 4 archivos por servicio (imágenes o videos)</small>
+
+    <div class="mt-3" id="preview-archivos-${index}"></div>
+
+    <button type="button" class="btn btn-danger mt-3" id="btn-eliminar-${index}">Eliminar</button>
+  `;
+
+  serviciosContainer.appendChild(card);
+
+  // Cargar valores si viene desde Firestore
+  if (data) {
+  document.getElementById(`select-servicio-${index}`).value = data.nombre || "";
+  document.getElementById(`descripcion-servicio-${index}`).value = data.descripcion || "";
+  renderEvidenciasTarjeta(index);
 }
 
-function renderEvidenciasTarjeta(index) { /* ... */ }
-function eliminarTarjeta(i) { /* ... */ }
+
+  // Eventos
+  document.getElementById(`btn-archivos-${index}`)
+    .addEventListener("click", () => seleccionarArchivos(index));
+
+  document.getElementById(`btn-eliminar-${index}`)
+    .addEventListener("click", () => eliminarTarjeta(index));
+
+  document.getElementById(`select-servicio-${index}`)
+    .addEventListener("change", e => serviciosState[index].nombre = e.target.value);
+
+  document.getElementById(`descripcion-servicio-${index}`)
+    .addEventListener("input", e => serviciosState[index].descripcion = e.target.value);
+}
+
+// ================= PREVIEW DE ARCHIVOS =================
+function seleccionarArchivos(index) {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*,video/*";
+  input.multiple = true;
+
+  input.onchange = () => {
+    const files = Array.from(input.files);
+
+    if (serviciosState[index].archivos.length + files.length > 4) {
+      mostrarAlerta("Límite", "Máximo 4 archivos por servicio.", "warning");
+      return;
+    }
+
+    serviciosState[index].archivos.push(...files);
+    renderEvidenciasTarjeta(index);
+  };
+
+  input.click();
+}
+
+// ================= MOSTRAR PREVIEW =================
+function renderEvidenciasTarjeta(index) {
+  const cont = document.getElementById(`preview-archivos-${index}`);
+  cont.innerHTML = "";
+
+  serviciosState[index].archivos.forEach((file, i) => {
+    const esUrl = typeof file === "string";
+    const url = esUrl ? file : URL.createObjectURL(file);
+
+    const div = document.createElement("div");
+    div.className = "position-relative d-inline-block me-2";
+
+    div.innerHTML = `
+      <img src="${url}" class="img-thumbnail" style="width:90px;height:90px;object-fit:cover;">
+      <button class="btn btn-sm btn-danger position-absolute top-0 end-0" id="del-${index}-${i}">
+        <i class="fas fa-times"></i>
+      </button>
+    `;
+
+    cont.appendChild(div);
+
+    document.getElementById(`del-${index}-${i}`)
+      .addEventListener("click", () => {
+        serviciosState[index].archivos.splice(i, 1);
+        renderEvidenciasTarjeta(index);
+      });
+  });
+}
+
+// ================= ELIMINAR TARJETA =================
+function eliminarTarjeta(index) {
+  serviciosState.splice(index, 1);
+
+  serviciosContainer.innerHTML = "";
+  serviciosState.forEach(srv => agregarTarjetaEspecialidad(true, srv));
+}
+
 
 // === GUARDAR CAMBIOS ===
 document.getElementById("btnGuardar")?.addEventListener("click", async () => {
@@ -287,3 +411,14 @@ document.getElementById("btnCancelar")?.addEventListener("click", () => {
 });
 
 btnAgregarEspecialidad?.addEventListener("click", () => agregarTarjetaEspecialidad());
+
+// 🔢 Limitar nota de precios a 120 caracteres
+const notaPrecioInput = document.getElementById("notaPrecio");
+
+notaPrecioInput.addEventListener("input", function () {
+  const maxLength = 120;
+
+  if (this.value.length > maxLength) {
+    this.value = this.value.substring(0, maxLength);
+  }
+});

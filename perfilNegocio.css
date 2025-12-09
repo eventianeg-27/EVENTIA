@@ -1,147 +1,224 @@
 /* perfilNegocio.css */
-
 /* Estilo general del fondo */
 body {
   background-color: #f8f9fa;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #333;
-}
-
-/* Título principal */
-h2.text-center {
-  font-weight: bold;
-  margin-bottom: 2rem;
-  color: #2c3e50;
+  overflow-x: hidden;
+  /* Evita scroll horizontal innecesario */
 }
 
 /* Contenedor de contenido del proveedor */
 #contenidoProveedor {
   background-color: #ffffff;
-  padding: 2rem;
-  border-radius: 1rem;
+  padding: 2.5rem;
+  border-radius: 1.25rem;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+#contenidoProveedor:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Nombre del negocio */
+.nombre-negocio {
+  color: #007bff;
+  font-weight: 700;
+  font-size: 1.7rem;
+  letter-spacing: -0.5px;
+  transition: color 0.3s ease;
+}
+
+.nombre-negocio:hover {
+  color: #0056b3;
+}
+
+/* Imagen de perfil */
+.profile-img {
+ 
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.profile-img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
+}
+
+/* Imagen de fachada */
+.facade-img {
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.facade-img:hover {
+  transform: scale(1.02);
+  filter: brightness(1.05);
+}
+
+/* Sección de información */
+.info-section .info-card {
+  background-color: #f9f9f9;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.info-section .info-card:hover {
+  transform: translateY(-5px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Encabezado del nombre del negocio */
-#contenidoProveedor h4 {
-  font-size: 1.75rem;
-  font-weight: bold;
-  color: #007bff;
-  margin-bottom: 1rem;
-}
-
-/* Párrafos de información */
-#contenidoProveedor p {
-  margin-bottom: 0.5rem;
-  font-size: 1.05rem;
-}
-
-/* Títulos secundarios */
-#contenidoProveedor h5 {
-  margin-top: 2rem;
-  font-weight: bold;
-  color: #444;
-}
-
-/* Imágenes y videos de evidencias */
-#contenidoProveedor img,
-#contenidoProveedor video {
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  max-height: 200px;
-  object-fit: cover;
-}
-
-/* Botones */
-button.btn {
-  padding: 0.5rem 1.25rem;
-  font-weight: 500;
-  border-radius: 0.5rem;
-}
-
-/* Regresar */
-.btn-secondary {
-  background-color: #6c757d;
-  border-color: #6c757d;
-}
-
-.btn-secondary:hover {
-  background-color: #5a6268;
-  border-color: #545b62;
-}
-
-/* Editar */
-.btn-primary {
-  background-color: #007bff;
-  border-color: #007bff;
-}
-
-.btn-primary:hover {
-  background-color: #0069d9;
-  border-color: #0062cc;
-}
-
-/* Estilo para la sección del encabezado de perfil */
-.perfil-header {
-  gap: 1rem;
-}
-
-/* Imagen del perfil al lado del nombre del negocio */
-.foto-perfil {
-  width: 120px;
-  height: 120px;
-  object-fit: cover;
-  border-radius: 50% !important;  /* Asegura el redondeado */
-  border: 3px solid #007bff;
-  box-shadow: 0 0 6px rgba(0, 123, 255, 0.4);
-}
-
-
-/* Más espacio entre la imagen de fachada y el campo de especialidad */
-#contenidoProveedor .fachada-negocio {
-  margin-bottom: 2rem; /* puedes aumentar a 3rem si quieres más espacio */
-}
-
-/* Espacio entre el texto "Fachada del negocio" y la imagen */
-#contenidoProveedor .fachada-negocio img {
-  margin-top: 0.75rem; /* puedes ajustar a 1rem si quieres más separación */
-}
-
-.nombre-negocio {
-  color: #007bff;             /* Azul brillante */
-  font-weight: 700;           /* Más grueso que bold */
-  
-  font-family: 'Segoe UI', sans-serif;  /* Igual al estilo de Windows */
-  letter-spacing: -0.5px;     /* Para que se vea compacto */
-}
-
-/* DÍA ABIERTO (estilo como la imagen) */
+/* Días abiertos */
 .dia-abierto {
   background-color: #007bff;
   color: white;
   padding: 8px 14px;
-  border-radius: 10px;
+  border-radius: 20px;
   font-weight: 600;
   font-size: 0.9rem;
-  display: flex;
-  align-items: center;
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-/* HORARIO (estilo verde como la imagen) */
+.dia-abierto:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+/* Horario */
 .horario-box {
-  background-color: #1f8d55;
+  background-color: #28a745;
   color: white;
   padding: 10px 16px;
-  display: inline-flex;
-  align-items: center;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  font-weight: 650;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
 }
 
+.horario-box:hover {
+  background-color: #218838;
+}
+
+/* Enlaces sociales */
+.social-link {
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.social-link:hover {
+  color: #0056b3 !important;
+  transform: translateY(-3px);
+}
+
+/* Título de servicios */
 .titulo-servicios {
-  font-size: 1.5rem !important; /* Más pequeño */
+  font-size: 1.8rem;
   font-weight: 600;
   color: #007bff;
+  position: relative;
+}
+
+.titulo-servicios::after {
+  content: '';
+  display: block;
+  width: 50px;
+  height: 3px;
+  background-color: #007bff;
+  margin: 10px auto 0;
+  transition: width 0.3s ease;
+}
+
+.titulo-servicios:hover::after {
+  width: 100px;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideLeft {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideRight {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.8s ease-in-out;
+}
+
+.animate-slide-left {
+  animation: slideLeft 0.8s ease-in-out;
+}
+
+.animate-slide-right {
+  animation: slideRight 0.8s ease-in-out;
+}
+
+.animate-pulse {
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+/* Botones principales */
+.btn-secondary,
+.btn-primary {
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.btn-secondary:hover,
+.btn-primary:hover {
+  transform: translateY(-2px);
 }
 

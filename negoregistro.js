@@ -265,35 +265,38 @@ function agregarTarjetaEspecialidad(fromRebuild = false, data = null) {
   card.dataset.index = index;
 
   card.innerHTML = `
-    <div class="badge-position">
-      <span class="badge bg-secondary">#${index + 1}</span>
-    </div>
+  <div class="d-flex justify-content-between">
+    <h5 class="fw-bold">Servicio ${index + 1}</h5>
+    <span class="badge text-bg-secondary">#${index + 1}</span>
+  </div>
 
-    <h6>Servicio ${index + 1}</h6>
+  <div class="mb-2">
+    <select id="select-servicio-${index}" class="form-select mb-2" data-index="${index}">
+      <option value="">Seleccione una</option>
+      <option>Fotografía y Video</option>
+      <option>Decoración y Ambientación</option>
+      <option>Renta de Mobiliario</option>
+      <option>Música y Entretenimiento</option>
+      <option>Banquete y Bebidas</option>
+    </select>
 
-    <div class="mb-2">
-      <select class="form-select select-servicio mb-2" data-index="${index}">
-        <option value="">Seleccione una</option>
-        <option>Fotografía y Video</option>
-        <option>Decoración y Ambientación</option>
-        <option>Renta de Mobiliario</option>
-        <option>Música y Entretenimiento</option>
-        <option>Banquete y Bebidas</option>
-      </select>
-      <textarea class="form-control descripcion-especialidad" data-index="${index}" placeholder="Descripción breve del servicio"></textarea>
-    </div>
+    <textarea id="descripcion-servicio-${index}" 
+              class="form-control descripcion-especialidad" 
+              data-index="${index}"
+              placeholder="Descripción breve del servicio"></textarea>
+  </div>
 
-    <div>
-      <button type="button" class="btn btn-outline-primary btn-sm btn-evidencia" data-index="${index}">
-        <i class="fas fa-paperclip me-1"></i> Subir fotos / videos
-      </button>
-      <br><small class="small-muted d-block mt-2">Hasta 4 archivos por servicio (imágenes o videos)</small>
+  <button type="button" class="btn btn-outline-primary w-100 mt-3" id="btn-archivos-${index}">
+    <i class="fas fa-paperclip"></i> Subir fotos / videos
+  </button>
 
-      <div class="evidencias-list" id="evidencias-list-${index}"></div>
-    </div>
+  <small class="text-muted">Hasta 4 archivos por servicio (imágenes o videos)</small>
 
-    <br><button type="button" class="btn btn-danger btn-sm btn-eliminar-tarjeta" data-index="${index}">Eliminar</button>
-  `;
+  <div class="mt-3" id="preview-archivos-${index}"></div>
+
+  <button type="button" class="btn btn-danger mt-3" id="btn-eliminar-${index}">Eliminar</button>
+`;
+
 
   serviciosContainer.appendChild(card);
 
